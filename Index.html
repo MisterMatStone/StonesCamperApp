@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Camper Gewicht" />
+  <title>Camper Gewicht</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;700&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
+    html, body { height: 100%; background: #f5f0e8; }
+    body { font-family: 'DM Sans', sans-serif; color: #2c2416; overscroll-behavior: none; }
+    button { cursor: pointer; border: none; background: none; font-family: inherit; font-size: inherit; }
+    input, select, textarea { font-family: inherit; }
+    input[type=number]::-webkit-inner-spin-button { opacity: 1; }
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-thumb { background: #b5a99066; border-radius: 4px; }
+
+    #app { max-width: 680px; margin: 0 auto; min-height: 100vh; }
+
+    /* Header */
+    .header { background: #2c3e2d; color: #f0ebe0; padding: 20px 20px 16px; display: flex; justify-content: space-between; align-items: center; }
+    .header-title { font-family: 'Fraunces', serif; font-size: 26px; font-weight: 700; letter-spacing: -0.5px; }
+    .header-sub { font-size: 12px; opacity: 0.7; margin-top: 2px; }
+    .settings-btn { font-size: 22px; color: #f0ebe0; padding: 4px; }
+
+    /* Weight card */
+    .weight-card { background: #fff; padding: 20px 20px 14px; border-bottom: 1px solid #e0d8cc; }
+    .weight-row { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 10px; }
+    .weight-label { font-size: 11px; color: #8a7a6a; text-transform: uppercase; letter-spacing: 1px; }
+    .weight-value { font-family: 'Fraunces', serif; font-size: 42px; font-weight: 700; line-height: 1.1; }
+    .weight-unit { font-size: 20px; font-weight: 400; }
+    .remain-value { font-family: 'Fraunces', serif; font-size: 24px; font-weight: 700; text-align: right; }
+    .bar-track { height: 12px; background: #e8e0d4; border-radius: 6px; overflow: hidden; }
+    .bar-fill { height: 100%; border-radius: 6px; transition: width 0.4s ease, background 0.3s; }
+    .bar-labels { display: flex; justify-content: space-between; margin-top: 4px; }
+    .bar-label { font-size: 10px; color: #8a7a6a; }
+
+    /* Nav */
+    .nav { display: flex; background: #3d4e3e; padding: 6px 10px; gap: 4px; }
+    .nav-btn { flex: 1; padding: 8px 2px; border-radius: 8px; color: #a0b5a0; font-size: 12px; font-weight: 500; transition: all 0.15s; }
+    .nav-btn.active { background: #5a7c5a; color: #fff; }
+
+    /* Content */
+    .content { padding: 16px 16px 80px; }
+    .section-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px; }
+    .section-title { font-family: 'Fraunces', serif; font-size: 20px; font-weight: 700; margin-bottom: 12px; display: block; }
+
+    /* Filter chips */
+    .filter-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+    .filter-chip { padding: 5px 12px; border-radius: 20px; font-size: 12px; background: #e8e0d4; color: #5a4a3a; font-weight: 500; transition: all 0.15s; }
+    .filter-chip.active { background: #5a7c5a; color: #fff; }
+
+    /* Check rows */
+    .check-row { width: 100%; display: flex; align-items: center; gap: 12px; padding: 12px 14px; background: #fff; border-radius: 12px; margin-bottom: 8px; border: 2px solid transparent; transition: all 0.15s; box-shadow: 0 1px 3px #00000010; text-align: left; }
+    .check-row.checked { border-color: #5a7c5a; background: #f0f5f0; }
+    .checkbox { width: 26px; height: 26px; border-radius: 8px; border: 2px solid #c0b8ac; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.15s; font-size: 14px; color: transparent; }
+    .checkbox.checked { background: #5a7c5a; border-color: #5a7c5a; color: #fff; }
+    .item-name { font-size: 15px; font-weight: 500; }
+    .item-cat { font-size: 12px; color: #8a7a6a; margin-top: 2px; }
+    .item-weight { font-size: 15px; font-weight: 600; flex-shrink: 0; }
+
+    /* Forms */
+    .add-box { display: flex; gap: 8px; margin-bottom: 14px; align-items: center; background: #fff; padding: 12px; border-radius: 12px; flex-wrap: wrap; }
+    .inp { padding: 10px 12px; border-radius: 8px; border: 1.5px solid #d8d0c4; font-size: 14px; background: #f8f4ee; outline: none; color: #2c2416; min-width: 0; width: 100%; }
+    .inp:focus { border-color: #5a7c5a; }
+    .add-btn { width: 42px; height: 42px; border-radius: 10px; background: #5a7c5a; color: #fff; font-size: 22px; font-weight: 700; flex-shrink: 0; }
+
+    /* Item rows (manage) */
+    .item-row { display: flex; align-items: center; padding: 12px 14px; background: #fff; border-radius: 12px; margin-bottom: 8px; box-shadow: 0 1px 3px #00000010; gap: 10px; }
+    .item-row .detail { font-size: 12px; color: #8a7a6a; margin-top: 3px; }
+    .item-row select { font-size: 12px; background: none; border: none; color: #8a7a6a; padding: 0; outline: none; }
+    .selected-badge { font-size: 11px; background: #e8f0e8; color: #5a7c5a; padding: 2px 8px; border-radius: 10px; font-weight: 600; white-space: nowrap; }
+
+    /* Buttons */
+    .btn-ghost { padding: 8px 14px; border-radius: 8px; border: 1.5px solid #c0b8ac; font-size: 13px; color: #5a4a3a; background: transparent; font-weight: 500; }
+    .btn-accent { padding: 8px 14px; border-radius: 8px; background: #5a7c5a; color: #fff; font-size: 13px; font-weight: 600; }
+    .btn-delete { width: 32px; height: 32px; border-radius: 8px; background: #f5ece8; color: #c0392b; font-size: 14px; font-weight: 700; flex-shrink: 0; }
+    .btn-row { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+
+    /* Sets */
+    .set-card { background: #fff; border-radius: 14px; padding: 14px 16px; margin-bottom: 12px; box-shadow: 0 1px 4px #00000012; }
+    .set-name { font-family: 'Fraunces', serif; font-size: 18px; font-weight: 700; }
+    .tag { padding: 3px 10px; border-radius: 20px; background: #e8e0d4; font-size: 11px; color: #5a4a3a; display: inline-block; }
+    .tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px; }
+    .save-set-box { display: flex; gap: 8px; margin-bottom: 14px; align-items: center; background: #f0f5f0; padding: 12px; border-radius: 12px; border: 1.5px solid #5a7c5a; flex-wrap: wrap; }
+
+    /* History */
+    .history-card { background: #fff; border-radius: 12px; padding: 12px 14px; margin-bottom: 10px; box-shadow: 0 1px 3px #00000010; }
+
+    /* Settings */
+    .settings-card { background: #fff; border-radius: 14px; padding: 18px; box-shadow: 0 1px 4px #00000012; margin-bottom: 12px; }
+    .settings-label { font-size: 14px; font-weight: 600; color: #3a3028; margin-bottom: 8px; display: block; }
+    .cat-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+    .inline-edit { cursor: text; border-bottom: 1px dashed #b0a898; outline: none; min-width: 40px; }
+    .inline-edit-input { background: #f0ebe0; border: 1.5px solid #5a7c5a; border-radius: 6px; padding: 2px 6px; outline: none; color: #2c2416; font-family: inherit; }
+
+    /* Danger */
+    .danger-card { background: #fff; border-radius: 14px; padding: 18px; box-shadow: 0 1px 4px #00000012; border: 1.5px solid #f0d0cc; }
+
+    /* Modal */
+    .modal-overlay { position: fixed; inset: 0; background: #0006; display: flex; align-items: center; justify-content: center; z-index: 100; padding: 20px; }
+    .modal { background: #fff; border-radius: 16px; padding: 24px; max-width: 340px; width: 100%; box-shadow: 0 8px 32px #0003; }
+    .modal h3 { font-family: 'Fraunces', serif; font-size: 20px; font-weight: 700; margin-bottom: 10px; color: #c0392b; }
+    .modal p { font-size: 14px; color: #5a4a3a; line-height: 1.5; margin-bottom: 20px; }
+    .modal-btns { display: flex; gap: 10px; justify-content: flex-end; }
+
+    .empty { color: #8a7a6a; font-size: 14px; padding: 24px 0; text-align: center; }
+    .hint { color: #8a7a6a; font-size: 12px; margin-top: 8px; text-align: center; }
+    .color-over { color: #c0392b; }
+    .color-warn { color: #e67e22; }
+    .color-ok { color: #5a7c5a; }
+    .hidden { display: none; }
+    .flex1 { flex: 1; }
+    .mt4 { margin-top: 4px; }
+    .mt8 { margin-top: 8px; }
+    .mt10 { margin-top: 10px; }
+    .mt12 { margin-top: 12px; }
+    .fw700 { font-weight: 700; }
+    .fs12 { font-size: 12px; }
+  </style>
+</head>
+<body>
+<div id="app"></div>
+
+<!-- Confirm modal -->
+<div id="confirm-modal" class="modal-overlay hidden">
+  <div class="modal">
+    <h3>⚠ Zurücksetzen?</h3>
+    <p>Alle Positionen, Sets, Kategorien und Einstellungen werden auf die Standardwerte zurückgesetzt. Diese Aktion kann nicht rückgängig gemacht werden.</p>
+    <div class="modal-btns">
+      <button class="btn-ghost" id="confirm-cancel">Abbrechen</button>
+      <button class="btn-accent" style="background:#c0392b" id="confirm-ok">Ja, zurücksetzen</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const MAX_WEIGHT = 3500;
+
+const DEFAULT_STATE = {
+  appName: "Camper Gewicht",
+  emptyWeight: 3120,
+  categories: ["Camping","Küche","Sport","Schlafen","Kleidung","Technik","Wasser","Sonstiges"],
+  items: [
+    {id:1,name:"Fahrräder (2x)",weight:28,category:"Sport",note:""},
+    {id:2,name:"Campingstühle & Tisch",weight:12,category:"Camping",note:""},
+    {id:3,name:"Schlafsäcke",weight:4,category:"Schlafen",note:""},
+    {id:4,name:"Kühlbox",weight:15,category:"Küche",note:""},
+    {id:5,name:"Werkzeugkasten",weight:8,category:"Technik",note:""},
+    {id:6,name:"Gaskocher & Zubehör",weight:6,category:"Küche",note:""},
+    {id:7,name:"Wassertank (voll)",weight:20,category:"Wasser",note:""},
+    {id:8,name:"Kleidung (2 Personen)",weight:10,category:"Kleidung",note:""},
+  ],
+  sets: [
+    {id:1,name:"Wochenendtrip",itemIds:[1,3,4,8],note:""},
+    {id:2,name:"Sommerreise",itemIds:[1,2,3,4,6,8],note:""},
+    {id:3,name:"Herbstreise",itemIds:[2,3,4,5,6,7,8],note:""},
+  ],
+};
+
+// ── State ─────────────────────────────────────────────────────────────────────
+function load(key, fallback) {
+  try { const s = localStorage.getItem(key); return s ? JSON.parse(s) : fallback; } catch { return fallback; }
+}
+function persist(key, val) { localStorage.setItem(key, JSON.stringify(val)); }
+
+let state = {
+  appName:     load("appName",     DEFAULT_STATE.appName),
+  emptyWeight: load("emptyWeight", DEFAULT_STATE.emptyWeight),
+  categories:  load("categories",  DEFAULT_STATE.categories),
+  items:       load("items",       DEFAULT_STATE.items),
+  sets:        load("sets",        DEFAULT_STATE.sets),
+  history:     load("tripHistory", []),
+  selected:    new Set(),
+  view:        "checklist",
+  filterCat:   "Alle",
+};
+
+function saveAll() {
+  persist("appName",     state.appName);
+  persist("emptyWeight", state.emptyWeight);
+  persist("categories",  state.categories);
+  persist("items",       state.items);
+  persist("sets",        state.sets);
+  persist("tripHistory", state.history);
+}
+
+// ── Computed ──────────────────────────────────────────────────────────────────
+function selectedWeight() {
+  return state.items.filter(i => state.selected.has(i.id)).reduce((s,i)=>s+i.weight,0);
+}
+function totalWeight() { return state.emptyWeight + selectedWeight(); }
+function remaining()   { return MAX_WEIGHT - totalWeight(); }
+
+// ── Render ────────────────────────────────────────────────────────────────────
+function h(tag, attrs, ...children) {
+  const el = document.createElement(tag);
+  if (attrs) {
+    for (const [k,v] of Object.entries(attrs)) {
+      if (k === "class") el.className = v;
+      else if (k.startsWith("on")) el.addEventListener(k.slice(2).toLowerCase(), v);
+      else if (k === "style" && typeof v === "object") Object.assign(el.style, v);
+      else el.setAttribute(k, v);
+    }
+  }
+  for (const c of children.flat()) {
+    if (c == null || c === false) continue;
+    el.appendChild(typeof c === "string" ? document.createTextNode(c) : c);
+  }
+  return el;
+}
+
+function inlineEdit(value, onSave, cls, inputCls) {
+  const span = h("span", {class: "inline-edit " + (cls||""), title: "Tippen zum Bearbeiten"}, value);
+  span.addEventListener("click", () => {
+    const inp = h("input", {class: "inline-edit-input " + (inputCls||""), value});
+    inp.style.fontSize = "inherit";
+    inp.style.fontWeight = "inherit";
+    inp.style.fontFamily = "inherit";
+    inp.style.width = Math.max(inp.value.length * 10, 80) + "px";
+    function commit() {
+      const v = inp.value.trim();
+      if (v) onSave(v);
+      inp.replaceWith(span);
+      span.textContent = v || value;
+    }
+    inp.addEventListener("blur", commit);
+    inp.addEventListener("keydown", e => {
+      if (e.key==="Enter") { e.preventDefault(); commit(); }
+      if (e.key==="Escape") inp.replaceWith(span);
+    });
+    span.replaceWith(inp);
+    inp.focus(); inp.select();
+  });
+  return span;
+}
+
+function render() {
+  const app = document.getElementById("app");
+  app.innerHTML = "";
+
+  const tw  = totalWeight();
+  const sw  = selectedWeight();
+  const rem = remaining();
+  const pct = Math.min((tw / MAX_WEIGHT) * 100, 100);
+  const isOver = tw > MAX_WEIGHT;
+  const isWarn = rem < 100 && !isOver;
+  const barColor = isOver ? "#c0392b" : isWarn ? "#e67e22" : "#5a7c5a";
+  const remColor = isOver ? "color-over" : isWarn ? "color-warn" : "color-ok";
+  const twColor  = isOver ? "#c0392b"    : isWarn ? "#e67e22"    : "#2c3e2d";
+
+  // ── Header ──
+  app.appendChild(h("div", {class:"header"},
+    h("div", null,
+      h("div", {class:"header-title"}, state.appName),
+      h("div", {class:"header-sub"}, `Max. ${MAX_WEIGHT} kg · Leergewicht ${state.emptyWeight} kg`)
+    ),
+    h("button", {class:"settings-btn", onClick: ()=>{ state.view="settings"; render(); }}, "⚙")
+  ));
+
+  // ── Weight card ──
+  const barFill = h("div", {class:"bar-fill", style:{width:pct+"%", background:barColor}});
+  app.appendChild(h("div", {class:"weight-card"},
+    h("div", {class:"weight-row"},
+      h("div", null,
+        h("div", {class:"weight-label"}, "Gesamtgewicht"),
+        h("div", {class:"weight-value", style:{color:twColor}}, tw.toFixed(1), h("span",{class:"weight-unit"}," kg"))
+      ),
+      h("div", null,
+        h("div", {class:"weight-label"}, isOver ? "🚫 Überladen!" : isWarn ? "⚠ Fast voll" : "Noch frei"),
+        h("div", {class:"remain-value " + remColor}, (isOver ? "+" : "") + Math.abs(rem).toFixed(1) + " kg")
+      )
+    ),
+    h("div", {class:"bar-track"}, barFill),
+    h("div", {class:"bar-labels"},
+      h("span",{class:"bar-label"},`Leer: ${state.emptyWeight} kg`),
+      h("span",{class:"bar-label"},`Zuladung: +${sw} kg · ${state.selected.size} Pos.`),
+      h("span",{class:"bar-label"},`Max: ${MAX_WEIGHT} kg`)
+    )
+  ));
+
+  // ── Nav ──
+  const navItems = [["checklist","✓ Checkliste"],["items","📦 Positionen"],["sets","📂 Sets"],["history","📋 Verlauf"]];
+  app.appendChild(h("div",{class:"nav"},
+    ...navItems.map(([v,label]) =>
+      h("button",{class:"nav-btn"+(state.view===v?" active":""), onClick:()=>{state.view=v;render();}}, label)
+    )
+  ));
+
+  const content = h("div", {class:"content"});
+  app.appendChild(content);
+
+  // ══ CHECKLIST ══
+  if (state.view === "checklist") {
+    const btnRow = h("div", {class:"btn-row"},
+      h("button",{class:"btn-ghost",onClick:()=>{state.selected=new Set();render();}},"Alle ab"),
+      h("button",{class:"btn-ghost",onClick:()=>{state.selected=new Set(state.items.map(i=>i.id));render();}},"Alle an")
+    );
+    if (state.selected.size > 0) {
+      btnRow.appendChild(h("button",{class:"btn-accent",onClick:showSaveSet},"Als Set speichern"));
+      btnRow.appendChild(h("button",{class:"btn-accent",onClick:saveToHistory, title:"Fahrt speichern"},"📋 Speichern"));
+    }
+    content.appendChild(h("div",{class:"section-row"},
+      h("span",{class:"section-title", style:{marginBottom:0}},"Aktuelle Fahrt"),
+      btnRow
+    ));
+
+    // Save-set box (hidden by default, shown via showSaveSet)
+    const saveSetBox = h("div",{class:"save-set-box hidden", id:"save-set-box"});
+    const ssnInput = h("input",{class:"inp",placeholder:"Name des Sets…",style:{flex:"2 1 120px"}});
+    const ssnNote  = h("input",{class:"inp",placeholder:"Notiz (optional)…",style:{flex:"3 1 140px"}});
+    saveSetBox.append(ssnInput, ssnNote,
+      h("button",{class:"btn-accent",onClick:()=>{
+        const n=ssnInput.value.trim();
+        if(!n||state.selected.size===0) return;
+        state.sets.push({id:Date.now(),name:n,itemIds:[...state.selected],note:ssnNote.value.trim()});
+        saveAll(); render();
+      }},"Speichern"),
+      h("button",{class:"btn-ghost",onClick:()=>saveSetBox.classList.add("hidden")},"✕")
+    );
+    content.appendChild(saveSetBox);
+
+    function showSaveSet() { saveSetBox.classList.remove("hidden"); ssnInput.focus(); }
+
+    // Filter chips
+    const usedCats = ["Alle", ...state.categories.filter(c=>state.items.some(i=>i.category===c))];
+    const filterRow = h("div",{class:"filter-row"},
+      ...usedCats.map(c=>h("button",{class:"filter-chip"+(state.filterCat===c?" active":""),
+        onClick:()=>{state.filterCat=c;render();}},c))
+    );
+    content.appendChild(filterRow);
+
+    const filtered = state.filterCat==="Alle" ? state.items : state.items.filter(i=>i.category===state.filterCat);
+    if (filtered.length===0) content.appendChild(h("div",{class:"empty"},"Keine Positionen in dieser Kategorie."));
+    filtered.forEach(item => {
+      const isChecked = state.selected.has(item.id);
+      const row = h("button",{class:"check-row"+(isChecked?" checked":""),onClick:()=>{
+        isChecked ? state.selected.delete(item.id) : state.selected.add(item.id);
+        render();
+      }},
+        h("div",{class:"checkbox"+(isChecked?" checked":"")}, isChecked?"✓":""),
+        h("div",{class:"flex1"},
+          h("div",{class:"item-name"},item.name),
+          h("div",{class:"item-cat"},item.category+(item.note?" · "+item.note:""))
+        ),
+        h("div",{class:"item-weight",style:{color:isChecked?"#5a7c5a":"#8a7a6a"}},item.weight+" kg")
+      );
+      content.appendChild(row);
+    });
+  }
+
+  // ══ ITEMS ══
+  if (state.view === "items") {
+    content.appendChild(h("span",{class:"section-title"},"Positionen verwalten"));
+    // Add form
+    const iName   = h("input",{class:"inp",placeholder:"Name…",style:{flex:"2 1 120px"}});
+    const iWeight = h("input",{class:"inp",placeholder:"kg",type:"number",step:"0.1",style:{flex:"1 1 60px"}});
+    const iCat    = h("select",{class:"inp",style:{flex:"1.5 1 90px"}},
+      ...state.categories.map(c=>{ const o=document.createElement("option"); o.value=c; o.textContent=c; return o; })
+    );
+    const iNote   = h("input",{class:"inp",placeholder:"Notiz (opt.)…",style:{flex:"2 1 100px"}});
+    content.appendChild(h("div",{class:"add-box"},
+      iName, iWeight, iCat, iNote,
+      h("button",{class:"add-btn",onClick:()=>{
+        const n=iName.value.trim(), w=parseFloat(iWeight.value);
+        if(!n||isNaN(w)) return;
+        state.items.push({id:Date.now(),name:n,weight:w,category:iCat.value,note:iNote.value.trim()});
+        saveAll(); render();
+      }},"＋")
+    ));
+
+    state.items.forEach(item=>{
+      const nameEl = inlineEdit(item.name, v=>{item.name=v;saveAll();},{});
+      const wEl    = inlineEdit(String(item.weight), v=>{const n=parseFloat(v);if(!isNaN(n)){item.weight=n;saveAll();}});
+      wEl.style.fontWeight="600"; wEl.style.fontSize="12px"; wEl.style.color="#5a4a3a";
+
+      const catSel = h("select",{},
+        ...state.categories.map(c=>{ const o=document.createElement("option"); o.value=c; o.textContent=c; if(c===item.category)o.selected=true; return o; })
+      );
+      catSel.style.cssText="font-size:12px;background:none;border:none;color:#8a7a6a;padding:0;outline:none;font-family:inherit;";
+      catSel.addEventListener("change",()=>{item.category=catSel.value;saveAll();});
+
+      const detail = h("div",{class:"detail"},wEl," kg · ",catSel,item.note?h("span",null," · "+item.note):"");
+      const badges = h("div",{style:{display:"flex",gap:"6px",alignItems:"center"}},
+        state.selected.has(item.id)?h("span",{class:"selected-badge"},"✓ aktiv"):"",
+        h("button",{class:"btn-delete",onClick:()=>{
+          state.items=state.items.filter(i=>i.id!==item.id);
+          state.selected.delete(item.id);
+          state.sets=state.sets.map(s=>({...s,itemIds:s.itemIds.filter(x=>x!==item.id)}));
+          saveAll(); render();
+        }},"✕")
+      );
+      content.appendChild(h("div",{class:"item-row"},
+        h("div",{class:"flex1"},nameEl,detail),
+        badges
+      ));
+    });
+    content.appendChild(h("div",{class:"hint"},"Namen und Gewichte direkt antippen zum Bearbeiten"));
+  }
+
+  // ══ SETS ══
+  if (state.view === "sets") {
+    content.appendChild(h("span",{class:"section-title"},"Gespeicherte Sets"));
+    if (state.sets.length===0) content.appendChild(h("div",{class:"empty"},"Noch keine Sets gespeichert. Wähle Positionen in der Checkliste und tippe „Als Set speichern"."));
+
+    state.sets.forEach(set=>{
+      const setItems = state.items.filter(i=>set.itemIds.includes(i.id));
+      const setW = setItems.reduce((s,i)=>s+i.weight,0);
+      const tot = state.emptyWeight + setW;
+      const ok  = tot <= MAX_WEIGHT;
+
+      const nameEl = inlineEdit(set.name, v=>{set.name=v;saveAll();});
+      nameEl.style.fontFamily="'Fraunces',serif";
+      nameEl.style.fontSize="18px";
+      nameEl.style.fontWeight="700";
+
+      const noteEl = set.note
+        ? inlineEdit(set.note, v=>{set.note=v;saveAll();})
+        : h("button",{class:"btn-ghost",style:{fontSize:"11px",padding:"3px 8px",marginTop:"4px"},
+            onClick:()=>{set.note="Notiz…";saveAll();render();}},"+Notiz");
+      if (set.note) { noteEl.style.fontSize="12px"; noteEl.style.color="#8a7a6a"; noteEl.style.fontStyle="italic"; }
+
+      const card = h("div",{class:"set-card"},
+        h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:"10px"}},
+          h("div",{class:"flex1"},
+            nameEl,
+            h("div",{class:"item-cat"},`${setItems.length} Positionen · +${setW} kg Zuladung`),
+            h("div",{class:"item-cat fw700",style:{color:ok?"#5a7c5a":"#c0392b"}},`Gesamt: ${tot.toFixed(1)} kg ${ok?"✓":"⚠ Überladen!"}`),
+            noteEl
+          ),
+          h("div",{style:{display:"flex",flexDirection:"column",gap:"6px",flexShrink:0}},
+            h("button",{class:"btn-accent",onClick:()=>{state.selected=new Set(set.itemIds);state.view="checklist";render();}},"Laden"),
+            h("button",{class:"btn-delete",onClick:()=>{state.sets=state.sets.filter(s=>s.id!==set.id);saveAll();render();}},"✕")
+          )
+        ),
+        h("div",{class:"tags"},...setItems.map(i=>h("span",{class:"tag"},i.name)))
+      );
+      content.appendChild(card);
+    });
+    content.appendChild(h("div",{class:"hint"},"Set-Namen direkt antippen zum Umbenennen"));
+  }
+
+  // ══ HISTORY ══
+  if (state.view === "history") {
+    content.appendChild(h("div",{class:"section-row"},
+      h("span",{class:"section-title",style:{marginBottom:0}},"Fahrtenverlauf"),
+      state.history.length>0?h("button",{class:"btn-ghost",onClick:()=>{state.history=[];saveAll();render();}},"Alles löschen"):""
+    ));
+    if (state.history.length===0) content.appendChild(h("div",{class:"empty"},"Noch keine Fahrten gespeichert. Wähle Positionen in der Checkliste und tippe 📋 Speichern."));
+    state.history.forEach(e=>{
+      const ok = e.totalWeight <= MAX_WEIGHT;
+      content.appendChild(h("div",{class:"history-card"},
+        h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center"}},
+          h("div",{style:{fontFamily:"'Fraunces',serif",fontSize:"17px",fontWeight:"700"}},e.date),
+          h("div",{style:{fontSize:"14px",fontWeight:"700",color:ok?"#5a7c5a":"#c0392b"}},e.totalWeight.toFixed(1)+" kg")
+        ),
+        h("div",{class:"item-cat"},`${e.count} Positionen · Zuladung: +${e.selectedWeight} kg`),
+        h("div",{class:"tags"},...e.itemNames.map(n=>h("span",{class:"tag"},n)))
+      ));
+    });
+  }
+
+  // ══ SETTINGS ══
+  if (state.view === "settings") {
+    content.appendChild(h("div",{style:{display:"flex",alignItems:"center",gap:"10px",marginBottom:"18px"}},
+      h("button",{class:"btn-ghost",onClick:()=>{state.view="checklist";render();}},"← Zurück"),
+      h("span",{class:"section-title",style:{marginBottom:0}},"Einstellungen")
+    ));
+
+    // App name
+    const nameInp = h("input",{class:"inp",placeholder:"App-Name…",value:state.appName,style:{flex:"1"}});
+    nameInp.addEventListener("input",()=>{state.appName=nameInp.value;saveAll();
+      document.querySelector(".header-title").textContent=state.appName;});
+    content.appendChild(h("div",{class:"settings-card"},
+      h("span",{class:"settings-label"},"Name der App"),
+      h("div",{style:{display:"flex",gap:"10px",marginTop:"0"}},nameInp),
+      h("div",{class:"item-cat mt4"},"Wird im Header angezeigt")
+    ));
+
+    // Empty weight
+    const ewInp = h("input",{class:"inp",type:"number",value:String(state.emptyWeight),style:{flex:"1"}});
+    content.appendChild(h("div",{class:"settings-card"},
+      h("span",{class:"settings-label"},"Leergewicht des Fahrzeugs (kg)"),
+      h("div",{style:{display:"flex",gap:"10px"}},
+        ewInp,
+        h("button",{class:"btn-accent",onClick:()=>{
+          const v=parseFloat(ewInp.value);
+          if(!isNaN(v)&&v>0){state.emptyWeight=v;saveAll();render();}
+        }},"Speichern")
+      ),
+      h("div",{class:"item-cat mt4"},`Gesetzliches Maximum: ${MAX_WEIGHT} kg (fest)`)
+    ));
+
+    // Categories
+    const catList = h("div",{style:{marginTop:"10px"}});
+    function renderCatList() {
+      catList.innerHTML="";
+      state.categories.forEach(cat=>{
+        const count = state.items.filter(i=>i.category===cat).length;
+        const nameEl = inlineEdit(cat, newName=>{
+          const n=newName.trim();
+          if(!n||n===cat||state.categories.includes(n)) return;
+          state.categories=state.categories.map(c=>c===cat?n:c);
+          state.items=state.items.map(i=>i.category===cat?{...i,category:n}:i);
+          saveAll(); renderCatList();
+        });
+        nameEl.style.flex="1"; nameEl.style.fontSize="14px"; nameEl.style.color="#2c2416";
+        catList.appendChild(h("div",{class:"cat-row"},
+          nameEl,
+          h("span",{class:"item-cat"},`(${count})`),
+          h("button",{class:"btn-delete",title:"Löschen (Positionen → Sonstiges)",
+            onClick:()=>{
+              state.categories=state.categories.filter(c=>c!==cat);
+              state.items=state.items.map(i=>i.category===cat?{...i,category:"Sonstiges"}:i);
+              saveAll(); renderCatList();
+            }},"✕")
+        ));
+      });
+    }
+    renderCatList();
+    const ncInp = h("input",{class:"inp",placeholder:"Neue Kategorie…",style:{flex:"1"}});
+    ncInp.addEventListener("keydown",e=>{ if(e.key==="Enter") addCat(); });
+    function addCat() {
+      const n=ncInp.value.trim();
+      if(!n||state.categories.includes(n)) return;
+      state.categories.push(n); ncInp.value=""; saveAll(); renderCatList();
+    }
+    content.appendChild(h("div",{class:"settings-card"},
+      h("span",{class:"settings-label"},"Kategorien"),
+      catList,
+      h("div",{style:{display:"flex",gap:"8px",marginTop:"10px"}},
+        ncInp,
+        h("button",{class:"add-btn",onClick:addCat},"＋")
+      ),
+      h("div",{class:"hint"},"Kategorienamen direkt antippen zum Umbenennen")
+    ));
+
+    // Danger
+    content.appendChild(h("div",{class:"danger-card"},
+      h("span",{class:"settings-label",style:{color:"#c0392b"}},"Daten zurücksetzen"),
+      h("div",{class:"item-cat"},"Alle Positionen, Sets und Einstellungen auf Standard zurücksetzen."),
+      h("button",{class:"btn-ghost mt10",style:{color:"#c0392b",borderColor:"#e0a0a0"},
+        onClick:()=>showConfirm()},"Zurücksetzen")
+    ));
+  }
+}
+
+// ── Save to history ───────────────────────────────────────────────────────────
+function saveToHistory() {
+  if (state.selected.size===0) return;
+  const sw = selectedWeight();
+  state.history.unshift({
+    id: Date.now(),
+    date: new Date().toLocaleDateString("de-DE"),
+    totalWeight: totalWeight(),
+    selectedWeight: sw,
+    count: state.selected.size,
+    itemNames: state.items.filter(i=>state.selected.has(i.id)).map(i=>i.name),
+  });
+  state.history = state.history.slice(0,20);
+  saveAll();
+  // Brief visual confirmation
+  const btn = document.querySelector(".btn-accent[title='Fahrt speichern']");
+  if (btn) { btn.textContent="✓ Gespeichert"; btn.disabled=true; setTimeout(()=>render(),1200); }
+}
+
+// ── Confirm modal ─────────────────────────────────────────────────────────────
+function showConfirm() {
+  document.getElementById("confirm-modal").classList.remove("hidden");
+}
+document.getElementById("confirm-cancel").addEventListener("click",()=>{
+  document.getElementById("confirm-modal").classList.add("hidden");
+});
+document.getElementById("confirm-ok").addEventListener("click",()=>{
+  localStorage.clear();
+  location.reload();
+});
+// Close on overlay click
+document.getElementById("confirm-modal").addEventListener("click",e=>{
+  if (e.target.id==="confirm-modal") document.getElementById("confirm-modal").classList.add("hidden");
+});
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+render();
+</script>
+</body>
+</html>
