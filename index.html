@@ -405,7 +405,7 @@ function render() {
   // ══ SETS ══
   if (state.view === "sets") {
     content.appendChild(h("span",{class:"section-title"},"Gespeicherte Sets"));
-    if (state.sets.length===0) content.appendChild(h("div",{class:"empty"},"Noch keine Sets gespeichert. Wähle Positionen in der Checkliste und tippe „Als Set speichern"."));
+    if (state.sets.length===0) content.appendChild(h("div",{class:"empty"},"Noch keine Sets gespeichert. Wähle Positionen in der Checkliste und tippe auf 'Als Set speichern'."));
 
     state.sets.forEach(set=>{
       const setItems = state.items.filter(i=>set.itemIds.includes(i.id));
