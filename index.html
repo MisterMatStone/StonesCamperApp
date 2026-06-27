@@ -4,6 +4,11 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>StonesCamperApp</title>
+  <link id="favicon" rel="icon" type="image/png" href="">
+  <link id="apple-touch-icon" rel="apple-touch-icon" href="">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta id="apple-app-title" name="apple-mobile-web-app-title" content="StonesCamperApp">
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;700&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
   <style>
@@ -164,8 +169,8 @@ var MAX_WEIGHT = 3500;
 var DEFAULT_STATE = {
   appName: "StonesCamperApp",
   modules: [
-    { id: "gewicht",   name: "Camper Gewicht", icon: "⚖️",  desc: "Gewicht & Packlisten" },
-    { id: "dokumente", name: "Dokumente",       icon: "📄",  desc: "Handbücher & Anleitungen" }
+    { id: "gewicht",   name: "Camper Gewicht", icon: "Gewicht",  desc: "Gewicht & Packlisten" },
+    { id: "dokumente", name: "Dokumente",       icon: "Docs",  desc: "Handbücher & Anleitungen" }
   ],
   baseWeights: [
     { id: 1, name: "Leergewicht Fahrzeug", weight: 3120 },
@@ -201,6 +206,7 @@ var state = {
   sets:        JSON.parse(JSON.stringify(DEFAULT_STATE.sets)),
   history:     [],
   docs:        [],
+  appIcon:       null,
   // UI state
   currentScreen: "home",
   gewichtView:   "checklist",
@@ -214,6 +220,7 @@ var state = {
 function getPersistedData() {
   return {
     appName:     state.appName,
+    appIcon:     state.appIcon || null,
     modules:     state.modules,
     baseWeights: state.baseWeights,
     categories:  state.categories,
@@ -226,6 +233,7 @@ function getPersistedData() {
 
 function applyData(d) {
   state.appName     = d.appName     || DEFAULT_STATE.appName;
+  state.appIcon     = d.appIcon     || null;
   state.modules     = d.modules     || JSON.parse(JSON.stringify(DEFAULT_STATE.modules));
   state.baseWeights = d.baseWeights || JSON.parse(JSON.stringify(DEFAULT_STATE.baseWeights));
   state.categories  = d.categories  || DEFAULT_STATE.categories.slice();
@@ -242,7 +250,7 @@ function saveToLocalStorage() {
 function loadFromLocalStorage() {
   try {
     var s = localStorage.getItem("stones_state");
-    if (s) applyData(JSON.parse(s));
+    if (s) { applyData(JSON.parse(s)); applyAppIcon(state.appIcon); applyAppTitle(state.appName); }
   } catch(e) {}
 }
 
@@ -352,7 +360,7 @@ function renderHome() {
     if (mod.iconImage) {
       iconEl = h("img", {src: mod.iconImage, style:{width:"48px",height:"48px",borderRadius:"12px",objectFit:"cover",flexShrink:"0"}});
     } else {
-      iconEl = h("span", {class:"module-icon"}, mod.icon || "📦");
+      iconEl = h("span", {class:"module-icon"}, mod.icon || "[Modul]");
     }
     modules.appendChild(h("button", {class:"module-btn", onClick: (function(m){ return function(){ showScreen(m.id); }; })(mod)},
       iconEl,
@@ -395,6 +403,57 @@ function renderHomeSettings() {
     h("div", {class:"item-cat mt4"}, "Wird auf der Startseite angezeigt")
   ));
 
+  // App Logo
+  var logoCard = h("div", {class:"settings-card"});
+  logoCard.appendChild(h("span", {class:"settings-label"}, "App-Logo"));
+  logoCard.appendChild(h("div", {class:"item-cat", style:{marginBottom:"12px"}}, "Wird im Browser-Tab und als App-Icon auf dem iPad-Homescreen angezeigt"));
+
+  var logoPreviewBox = h("div", {style:{display:"flex",alignItems:"center",gap:"16px",marginBottom:"12px"}});
+  if (state.appIcon) {
+    logoPreviewBox.appendChild(h("img", {src:state.appIcon, style:{width:"64px",height:"64px",borderRadius:"14px",objectFit:"cover",boxShadow:"0 2px 8px #0002"}}));
+    logoPreviewBox.appendChild(h("div", null,
+      h("div", {style:{fontSize:"13px",fontWeight:"600",color:"#2c2416"}}, "Logo gesetzt"),
+      h("div", {class:"item-cat"}, "Tippe auf 'Ändern' um ein neues zu wählen")
+    ));
+  } else {
+    logoPreviewBox.appendChild(h("div", {style:{width:"64px",height:"64px",borderRadius:"14px",background:"#e8e0d4",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"28px"}}, "[App]"));
+    logoPreviewBox.appendChild(h("div", null,
+      h("div", {style:{fontSize:"13px",fontWeight:"600",color:"#2c2416"}}, "Kein Logo"),
+      h("div", {class:"item-cat"}, "PNG empfohlen, mind. 180×180px")
+    ));
+  }
+  logoCard.appendChild(logoPreviewBox);
+
+  var logoInput = document.createElement("input");
+  logoInput.type = "file"; logoInput.accept = "image/png,image/jpeg"; logoInput.style.display = "none";
+  logoInput.addEventListener("change", function(e) {
+    var file = e.target.files[0];
+    if (!file) return;
+    if (file.size > 500000) { alert("Bild zu groß (max. 500KB)"); return; }
+    var reader = new FileReader();
+    reader.onload = function(ev) {
+      state.appIcon = ev.target.result;
+      applyAppIcon(state.appIcon);
+      saveAll();
+      renderHomeSettings();
+    };
+    reader.readAsDataURL(file);
+  });
+  logoCard.appendChild(logoInput);
+
+  var logoBtnRow = h("div", {style:{display:"flex",gap:"8px"}});
+  logoBtnRow.appendChild(h("button", {class:"btn-accent", style:{flex:"1"}, onClick:function(){ logoInput.click(); }}, state.appIcon ? " Logo ändern" : "Logo hochladen"));
+  if (state.appIcon) {
+    logoBtnRow.appendChild(h("button", {class:"btn-ghost", style:{color:"#c0392b"}, onClick:function(){
+      state.appIcon = null;
+      applyAppIcon(null);
+      saveAll(); renderHomeSettings();
+    }}, "✕ Entfernen"));
+  }
+  logoCard.appendChild(logoBtnRow);
+  logoCard.appendChild(h("div", {class:"hint", style:{marginTop:"10px"}}, "Nach dem Hinzufügen zum Homescreen erscheint das Icon automatisch"));
+  content.appendChild(logoCard);
+
   // Module
   var modCard = h("div", {class:"settings-card"});
   modCard.appendChild(h("span", {class:"settings-label"}, "Module"));
@@ -411,7 +470,7 @@ function renderHomeSettings() {
     if (mod.iconImage) {
       iconPreview = h("img", {src: mod.iconImage, style:{width:"44px",height:"44px",borderRadius:"10px",objectFit:"cover",flexShrink:"0"}});
     } else {
-      iconPreview = h("span", {style:{fontSize:"36px",flexShrink:"0",lineHeight:"1"}}, mod.icon || "📦");
+      iconPreview = h("span", {style:{fontSize:"36px",flexShrink:"0",lineHeight:"1"}}, mod.icon || "[Modul]");
     }
 
     // Upload-Input (unsichtbar)
@@ -434,11 +493,11 @@ function renderHomeSettings() {
     })(mod, iconPreview));
 
     var uploadBtn = h("button", {class:"btn-ghost", style:{fontSize:"11px",padding:"4px 8px",marginTop:"4px",display:"block"},
-      onClick: function(){ uploadInp.click(); }}, "📁 Bild wählen");
+      onClick: function(){ uploadInp.click(); }}, "Bild waehlen");
 
     var removeBtn = mod.iconImage
       ? h("button", {class:"btn-ghost", style:{fontSize:"11px",padding:"4px 8px",marginTop:"4px",display:"block",color:"#c0392b"},
-          onClick: (function(m){ return function(){ m.iconImage = null; m.icon = "📦"; saveAll(); renderHomeSettings(); }; })(mod)}, "✕ Entfernen")
+          onClick: (function(m){ return function(){ m.iconImage = null; m.icon = "[Modul]"; saveAll(); renderHomeSettings(); }; })(mod)}, "✕ Entfernen")
       : h("span", null, "");
 
     var iconBox = h("div", {style:{display:"flex",flexDirection:"column",alignItems:"center",gap:"2px",flexShrink:"0"}},
@@ -461,17 +520,17 @@ function renderHomeSettings() {
   backupCard.appendChild(h("div", {class:"item-cat", style:{marginBottom:"12px"}}, "Daten sichern oder in neuem Browser wiederherstellen"));
 
   // JSON Export
-  backupCard.appendChild(h("button", {class:"btn-accent", style:{width:"100%",marginBottom:"8px"}, onClick: exportJSON}, "⬇ Backup herunterladen (JSON)"));
+  backupCard.appendChild(h("button", {class:"btn-accent", style:{width:"100%",marginBottom:"8px"}, onClick: exportJSON}, "Backup herunterladen (JSON)"));
 
   // JSON Import
   var fileInp = document.createElement("input");
   fileInp.type = "file"; fileInp.accept = ".json"; fileInp.style.display = "none";
   fileInp.addEventListener("change", function(e){ if(e.target.files[0]) importJSON(e.target.files[0]); });
   backupCard.appendChild(fileInp);
-  backupCard.appendChild(h("button", {class:"btn-ghost", style:{width:"100%",marginBottom:"8px"}, onClick: function(){ fileInp.click(); }}, "⬆ Backup wiederherstellen (JSON)"));
+  backupCard.appendChild(h("button", {class:"btn-ghost", style:{width:"100%",marginBottom:"8px"}, onClick: function(){ fileInp.click(); }}, "Backup wiederherstellen (JSON)"));
 
   // PDF Export
-  backupCard.appendChild(h("button", {class:"btn-ghost", style:{width:"100%"}, onClick: exportPDF}, "📄 Daten als PDF exportieren"));
+  backupCard.appendChild(h("button", {class:"btn-ghost", style:{width:"100%"}, onClick: exportPDF}, "Daten als PDF exportieren"));
 
   backupCard.appendChild(h("div", {class:"hint"}, "JSON-Backup enthält alle Daten und kann jederzeit wiederhergestellt werden"));
   content.appendChild(backupCard);
@@ -501,7 +560,7 @@ function renderGewicht() {
   app.appendChild(h("div", {class:"header"},
     headerLeft,
     h("div", {style:{display:"flex",gap:"8px",alignItems:"center"}},
-      h("button", {class:"back-btn", onClick: function(){ showScreen("home"); }}, "🏠"),
+      h("button", {class:"back-btn", onClick: function(){ showScreen("home"); }}, "Zurueck"),
       state.gewichtView !== "settings"
         ? h("button", {class:"settings-btn", onClick: function(){ state.gewichtView="settings"; renderGewicht(); }}, "⚙")
         : h("span", null, "")
@@ -517,7 +576,7 @@ function renderGewicht() {
           h("div", {class:"weight-value", style:{color:twColor}}, tw.toFixed(1), h("span",{class:"weight-unit"}," kg"))
         ),
         h("div", null,
-          h("div", {class:"weight-label"}, isOver?"🚫 Überladen!":isWarn?"⚠ Fast voll":"Noch frei"),
+          h("div", {class:"weight-label"}, isOver?"Ueberladen!":isWarn?"⚠ Fast voll":"Noch frei"),
           h("div", {class:"remain-value "+remColor}, (isOver?"+":"") + Math.abs(rem).toFixed(1) + " kg")
         )
       ),
@@ -530,7 +589,7 @@ function renderGewicht() {
     ));
 
     // Sub-Nav
-    var navItems = [["checklist","✓ Checkliste"],["items","📦 Positionen"],["sets","📂 Sets"],["history","📋 Verlauf"]];
+    var navItems = [["checklist","✓ Checkliste"],["items","Positionen"],["sets","Sets"],["history","Verlauf"]];
     app.appendChild(h("div",{class:"nav"},
       navItems.map(function(x){
         return h("button",{class:"nav-btn"+(state.gewichtView===x[0]?" active":""),
@@ -550,7 +609,7 @@ function renderGewicht() {
     );
     if (state.selected.size > 0) {
       btnRow.appendChild(h("button",{class:"btn-accent",onClick:showSaveSet},"Als Set speichern"));
-      btnRow.appendChild(h("button",{class:"btn-accent",onClick:saveToHistory,title:"Fahrt speichern"},"📋 Speichern"));
+      btnRow.appendChild(h("button",{class:"btn-accent",onClick:saveToHistory,title:"Fahrt speichern"},"Speichern"));
     }
     content.appendChild(h("div",{class:"section-row"},
       h("span",{class:"section-title",style:{marginBottom:"0"}},"Aktuelle Fahrt"), btnRow
@@ -607,7 +666,7 @@ function renderGewicht() {
       var n=iName.value.trim(),w=parseFloat(iWeight.value); if(!n||isNaN(w)) return;
       state.items.push({id:Date.now(),name:n,weight:w,category:iCat.value,note:iNote.value.trim()});
       saveAll(); renderGewicht();
-    }},"＋"));
+    }},""));
     content.appendChild(addBox);
     state.items.forEach(function(item){
       var nameEl=inlineEdit(item.name,function(v){item.name=v;saveAll();});
@@ -723,7 +782,7 @@ function renderGewicht() {
     basisCard.appendChild(basisList); basisCard.appendChild(totalEl);
     var addBasisBox=h("div",{class:"add-box",style:{marginTop:"12px",marginBottom:"0"}});
     addBasisBox.appendChild(bwName); addBasisBox.appendChild(bwWeight);
-    addBasisBox.appendChild(h("button",{class:"add-btn",onClick:addBasis},"＋"));
+    addBasisBox.appendChild(h("button",{class:"add-btn",onClick:addBasis},""));
     basisCard.appendChild(addBasisBox);
     basisCard.appendChild(h("div",{class:"hint"},"Namen und Gewichte direkt antippen zum Bearbeiten"));
     content.appendChild(basisCard);
@@ -756,7 +815,7 @@ function renderGewicht() {
     function addCat(){var n=ncInp.value.trim();if(!n||state.categories.includes(n))return;state.categories.push(n);ncInp.value="";saveAll();renderCatList();}
     ncInp.addEventListener("keydown",function(e){if(e.key==="Enter")addCat();});
     var catAddBox=h("div",{style:{display:"flex",gap:"8px",marginTop:"10px"}});
-    catAddBox.appendChild(ncInp); catAddBox.appendChild(h("button",{class:"add-btn",onClick:addCat},"＋"));
+    catAddBox.appendChild(ncInp); catAddBox.appendChild(h("button",{class:"add-btn",onClick:addCat},""));
     content.appendChild(h("div",{class:"settings-card"},h("span",{class:"settings-label"},"Kategorien"),catList,catAddBox,h("div",{class:"hint"},"Kategorienamen direkt antippen zum Umbenennen")));
 
     // Danger
@@ -795,7 +854,7 @@ function renderDocs() {
       h("div", {class:"sync-indicator"}, state.syncStatus)
     ),
     h("div", {style:{display:"flex",gap:"8px",alignItems:"center"}},
-      h("button", {class:"back-btn", onClick: function(){ showScreen("home"); }}, "🏠"),
+      h("button", {class:"back-btn", onClick: function(){ showScreen("home"); }}, "Zurueck"),
       state.docsView !== "settings"
         ? h("button", {class:"settings-btn", onClick: function(){ state.docsView="settings"; renderDocs(); }}, "⚙")
         : h("span", null, "")
@@ -825,7 +884,7 @@ function renderDocs() {
     }
     dUrl.addEventListener("keydown",function(e){if(e.key==="Enter")addDoc();});
     addBox.appendChild(dName); addBox.appendChild(dDesc); addBox.appendChild(dUrl);
-    addBox.appendChild(h("button",{class:"btn-accent",style:{width:"100%"},onClick:addDoc},"＋ Hinzufügen"));
+    addBox.appendChild(h("button",{class:"btn-accent",style:{width:"100%"},onClick:addDoc}," Hinzufügen"));
     content.appendChild(addBox);
 
     if(state.docs.length>0){
@@ -852,7 +911,7 @@ function renderDocs() {
   }
   state.docs.forEach(function(doc){
     content.appendChild(h("a",{class:"doc-card",href:doc.url,target:"_blank"},
-      h("span",{class:"doc-icon"},"📄"),
+      h("span",{class:"doc-icon"},"PDF"),
       h("div",{class:"flex1"},
         h("div",{class:"doc-name"},doc.name),
         doc.desc?h("div",{class:"doc-desc"},doc.desc):h("span",null,"")
@@ -860,6 +919,21 @@ function renderDocs() {
       h("span",{class:"doc-arrow"},"›")
     ));
   });
+}
+
+// ── Logo / Icon ──────────────────────────────────────────────────────────────
+function applyAppIcon(dataUrl) {
+  if (!dataUrl) return;
+  var favicon = document.getElementById("favicon");
+  var touchIcon = document.getElementById("apple-touch-icon");
+  if (favicon) favicon.href = dataUrl;
+  if (touchIcon) touchIcon.href = dataUrl;
+}
+
+function applyAppTitle(name) {
+  document.title = name;
+  var meta = document.getElementById("apple-app-title");
+  if (meta) meta.content = name;
 }
 
 // ── Export / Import ──────────────────────────────────────────────────────────
@@ -914,7 +988,7 @@ function exportPDF() {
   html += '@media print{button{display:none!important;}}';
   html += '</style></head><body>';
 
-  html += '<button onclick="window.print()" style="float:right;background:#2c3e2d;color:#fff;border:none;padding:8px 16px;border-radius:6px;cursor:pointer;font-size:14px;">🖨 Drucken / PDF</button>';
+  html += '<button onclick="window.print()" style="float:right;background:#2c3e2d;color:#fff;border:none;padding:8px 16px;border-radius:6px;cursor:pointer;font-size:14px;"> Drucken / PDF</button>';
   html += '<h1>' + state.appName + '</h1>';
   html += '<div class="meta">Exportiert am ' + date + '</div>';
 
@@ -991,7 +1065,7 @@ document.getElementById("confirm-modal").addEventListener("click",function(e){
 function syncFromFirebase(){
   if(!DOC) return;
   DOC.get().then(function(snap){
-    if(snap.exists){ applyData(snap.data()); }
+    if(snap.exists){ applyData(snap.data()); applyAppIcon(state.appIcon); applyAppTitle(state.appName); }
     else { DOC.set(getPersistedData()); }
     state.syncStatus="✓ Verbunden";
     saveToLocalStorage();
