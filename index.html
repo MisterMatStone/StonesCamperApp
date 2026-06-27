@@ -172,20 +172,18 @@ var DEFAULT_STATE = {
     { id: "gewicht",   name: "Camper Gewicht", icon: "Gewicht",  desc: "Gewicht & Packlisten" },
     { id: "dokumente", name: "Dokumente",       icon: "Docs",  desc: "Handbücher & Anleitungen" }
   ],
-  baseWeights: [
-    { id: 1, name: "Leergewicht Fahrzeug", weight: 3120 },
-    { id: 2, name: "Fahrer", weight: 80 }
-  ],
   categories: ["Camping","Küche","Sport","Schlafen","Kleidung","Technik","Wasser","Sonstiges"],
   items: [
-    {id:1,name:"Fahrräder (2x)",weight:28,category:"Sport",note:""},
-    {id:2,name:"Campingstühle & Tisch",weight:12,category:"Camping",note:""},
-    {id:3,name:"Schlafsäcke",weight:4,category:"Schlafen",note:""},
-    {id:4,name:"Kühlbox",weight:15,category:"Küche",note:""},
-    {id:5,name:"Werkzeugkasten",weight:8,category:"Technik",note:""},
-    {id:6,name:"Gaskocher & Zubehör",weight:6,category:"Küche",note:""},
-    {id:7,name:"Wassertank (voll)",weight:20,category:"Wasser",note:""},
-    {id:8,name:"Kleidung (2 Personen)",weight:10,category:"Kleidung",note:""}
+    {id:1,name:"Leergewicht Fahrzeug",weight:3120,category:"Sonstiges",note:"",basis:true},
+    {id:2,name:"Fahrer",weight:80,category:"Sonstiges",note:"",basis:true},
+    {id:3,name:"Fahrräder (2x)",weight:28,category:"Sport",note:"",basis:false},
+    {id:4,name:"Campingstühle & Tisch",weight:12,category:"Camping",note:"",basis:false},
+    {id:5,name:"Schlafsäcke",weight:4,category:"Schlafen",note:"",basis:false},
+    {id:6,name:"Kühlbox",weight:15,category:"Küche",note:"",basis:false},
+    {id:7,name:"Werkzeugkasten",weight:8,category:"Technik",note:"",basis:false},
+    {id:8,name:"Gaskocher & Zubehör",weight:6,category:"Küche",note:"",basis:false},
+    {id:9,name:"Wassertank (voll)",weight:20,category:"Wasser",note:"",basis:false},
+    {id:10,name:"Kleidung (2 Personen)",weight:10,category:"Kleidung",note:"",basis:false}
   ],
   sets: [
     {id:1,name:"Wochenendtrip",itemIds:[1,3,4,8],note:""},
@@ -200,7 +198,6 @@ var DEFAULT_STATE = {
 var state = {
   appName:     DEFAULT_STATE.appName,
   modules:     JSON.parse(JSON.stringify(DEFAULT_STATE.modules)),
-  baseWeights: JSON.parse(JSON.stringify(DEFAULT_STATE.baseWeights)),
   categories:  DEFAULT_STATE.categories.slice(),
   items:       JSON.parse(JSON.stringify(DEFAULT_STATE.items)),
   sets:        JSON.parse(JSON.stringify(DEFAULT_STATE.sets)),
@@ -219,28 +216,26 @@ var state = {
 // ── Persistence ───────────────────────────────────────────────────────────────
 function getPersistedData() {
   return {
-    appName:     state.appName,
-    appIcon:     state.appIcon || null,
-    modules:     state.modules,
-    baseWeights: state.baseWeights,
-    categories:  state.categories,
-    items:       state.items,
-    sets:        state.sets,
-    history:     state.history,
-    docs:        state.docs
+    appName:    state.appName,
+    appIcon:    state.appIcon || null,
+    modules:    state.modules,
+    categories: state.categories,
+    items:      state.items,
+    sets:       state.sets,
+    history:    state.history,
+    docs:       state.docs
   };
 }
 
 function applyData(d) {
-  state.appName     = d.appName     || DEFAULT_STATE.appName;
-  state.appIcon     = d.appIcon     || null;
-  state.modules     = d.modules     || JSON.parse(JSON.stringify(DEFAULT_STATE.modules));
-  state.baseWeights = d.baseWeights || JSON.parse(JSON.stringify(DEFAULT_STATE.baseWeights));
-  state.categories  = d.categories  || DEFAULT_STATE.categories.slice();
-  state.items       = d.items       || JSON.parse(JSON.stringify(DEFAULT_STATE.items));
-  state.sets        = d.sets        || JSON.parse(JSON.stringify(DEFAULT_STATE.sets));
-  state.history     = d.history     || [];
-  state.docs        = d.docs        || [];
+  state.appName    = d.appName    || DEFAULT_STATE.appName;
+  state.appIcon    = d.appIcon    || null;
+  state.modules    = d.modules    || JSON.parse(JSON.stringify(DEFAULT_STATE.modules));
+  state.categories = d.categories || DEFAULT_STATE.categories.slice();
+  state.items      = (d.items     || JSON.parse(JSON.stringify(DEFAULT_STATE.items))).map(function(i){ return Object.assign({basis:false}, i); });
+  state.sets       = d.sets       || JSON.parse(JSON.stringify(DEFAULT_STATE.sets));
+  state.history    = d.history    || [];
+  state.docs       = d.docs       || [];
 }
 
 function saveToLocalStorage() {
@@ -279,8 +274,8 @@ function updateSyncIndicator() {
 }
 
 // ── Computed ──────────────────────────────────────────────────────────────────
-function baseWeight()     { return state.baseWeights.reduce(function(s,b){ return s+b.weight; }, 0); }
-function selectedWeight() { return state.items.filter(function(i){ return state.selected.has(i.id); }).reduce(function(s,i){ return s+i.weight; }, 0); }
+function baseWeight()     { return state.items.filter(function(i){ return i.basis; }).reduce(function(s,i){ return s+i.weight; }, 0); }
+function selectedWeight() { return state.items.filter(function(i){ return !i.basis && state.selected.has(i.id); }).reduce(function(s,i){ return s+i.weight; }, 0); }
 function totalWeight()    { return baseWeight() + selectedWeight(); }
 function remaining()      { return MAX_WEIGHT - totalWeight(); }
 
@@ -645,9 +640,29 @@ function renderGewicht() {
       })
     ));
 
-    var filtered = state.filterCat==="Alle" ? state.items : state.items.filter(function(i){ return i.category===state.filterCat; });
-    if (filtered.length===0) content.appendChild(h("div",{class:"empty"},"Keine Positionen in dieser Kategorie."));
-    filtered.forEach(function(item){
+    // Basis-Positionen immer oben anzeigen (wenn "Alle" oder passende Kategorie)
+    var basisItems = state.items.filter(function(i){ return i.basis && (state.filterCat==="Alle" || i.category===state.filterCat); });
+    var varItems   = state.items.filter(function(i){ return !i.basis && (state.filterCat==="Alle" || i.category===state.filterCat); });
+
+    if (basisItems.length > 0 && state.filterCat==="Alle") {
+      content.appendChild(h("div",{style:{fontSize:"11px",color:"#8a7a6a",textTransform:"uppercase",letterSpacing:"1px",marginBottom:"6px",marginTop:"4px"}},"Basisgewichte (immer aktiv)"));
+      basisItems.forEach(function(item){
+        content.appendChild(h("div",{class:"check-row checked",style:{opacity:"0.75",cursor:"default",borderColor:"#a0b8a0"}},
+          h("div",{class:"checkbox checked",style:{background:"#a0b8a0",borderColor:"#a0b8a0"}},"✓"),
+          h("div",{class:"flex1"},
+            h("div",{class:"item-name"},item.name),
+            h("div",{class:"item-cat"},item.category+(item.note?" · "+item.note:"")+" · Basisgewicht")
+          ),
+          h("div",{class:"item-weight",style:{color:"#7a9a7a"}},item.weight+" kg")
+        ));
+      });
+      if (varItems.length > 0) {
+        content.appendChild(h("div",{style:{fontSize:"11px",color:"#8a7a6a",textTransform:"uppercase",letterSpacing:"1px",marginBottom:"6px",marginTop:"12px"}},"Zuladung"));
+      }
+    }
+
+    if (varItems.length===0 && basisItems.length===0) content.appendChild(h("div",{class:"empty"},"Keine Positionen in dieser Kategorie."));
+    varItems.forEach(function(item){
       var isChecked = state.selected.has(item.id);
       content.appendChild(h("button",{class:"check-row"+(isChecked?" checked":""),
         onClick:(function(it,chk){ return function(){ chk?state.selected.delete(it.id):state.selected.add(it.id); renderGewicht(); }; })(item,isChecked)},
@@ -673,7 +688,7 @@ function renderGewicht() {
     addBox.appendChild(iName); addBox.appendChild(iWeight); addBox.appendChild(iCat); addBox.appendChild(iNote);
     addBox.appendChild(h("button",{class:"add-btn",onClick:function(){
       var n=iName.value.trim(),w=parseFloat(iWeight.value); if(!n||isNaN(w)) return;
-      state.items.push({id:Date.now(),name:n,weight:w,category:iCat.value,note:iNote.value.trim()});
+      state.items.push({id:Date.now(),name:n,weight:w,category:iCat.value,note:iNote.value.trim(),basis:false});
       saveAll(); renderGewicht();
     }},""));
     content.appendChild(addBox);
@@ -976,8 +991,7 @@ function importJSON(file) {
 }
 
 function exportPDF() {
-  var win = window.open("", "_blank");
-  var bw  = baseWeight();
+  var bw   = baseWeight();
   var date = new Date().toLocaleDateString("de-DE");
 
   var html = '<!DOCTYPE html><html><head><meta charset="UTF-8">';
@@ -1051,8 +1065,17 @@ function exportPDF() {
   }
 
   html += '</body></html>';
-  win.document.write(html);
-  win.document.close();
+  // Als HTML-Datei herunterladen - öffnet sich im Standard-Browser/PDF-Viewer
+  var blob = new Blob([html], {type: "text/html;charset=utf-8"});
+  var url  = URL.createObjectURL(blob);
+  var a    = document.createElement("a");
+  a.href   = url;
+  a.target = "_blank";
+  a.download = state.appName.replace(/\s+/g, "_") + "_Export_" + new Date().toISOString().slice(0,10) + ".html";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
 }
 
 // ── Confirm Modal ─────────────────────────────────────────────────────────────
