@@ -198,6 +198,7 @@ var state = {
   view:        "checklist",
   filterCat:   "Alle",
   section:     "gewicht",
+  docsView:    "list",
   syncStatus:  "Verbindet…",
 };
 
@@ -715,52 +716,73 @@ function renderDocs() {
       h("div", {class:"header-title"}, "Dokumente"),
       h("div", {class:"header-sub"}, "Handbücher & Anleitungen"),
       h("div", {class:"sync-indicator"}, state.syncStatus)
-    )
+    ),
+    h("button", {class:"settings-btn", onClick: function(){ state.docsView="settings"; renderDocs(); }}, "⚙")
   ));
 
-  var content = h("div", {style:{padding:"16px 16px 80px"}});
+  var content = h("div", {style:{padding:"16px 16px 90px"}});
   app.appendChild(content);
 
-  // Dokument hinzufügen
-  var addBox = h("div", {class:"doc-add-box"});
-  addBox.appendChild(h("div", {class:"doc-add-title"}, "Dokument hinzufügen"));
-  var dName = h("input",{class:"inp",placeholder:"Name (z.B. Aufstelldach Anleitung)…",style:{marginBottom:"8px"}});
-  var dDesc = h("input",{class:"inp",placeholder:"Beschreibung (optional)…",style:{marginBottom:"8px"}});
-  var dUrl  = h("input",{class:"inp",placeholder:"URL zum PDF…",style:{marginBottom:"8px"}});
-  function addDoc() {
-    var n=dName.value.trim(), u=dUrl.value.trim();
-    if(!n||!u) return;
-    state.docs.push({id:Date.now(), name:n, desc:dDesc.value.trim(), url:u});
-    dName.value=""; dDesc.value=""; dUrl.value="";
-    saveAll(); renderDocs();
-  }
-  addBox.appendChild(dName);
-  addBox.appendChild(dDesc);
-  addBox.appendChild(dUrl);
-  addBox.appendChild(h("button",{class:"btn-accent",style:{width:"100%"},onClick:addDoc},"＋ Dokument hinzufügen"));
-  content.appendChild(addBox);
+  // ── Einstellungen ──
+  if (state.docsView === "settings") {
+    content.appendChild(h("div",{style:{display:"flex",alignItems:"center",gap:"10px",marginBottom:"18px"}},
+      h("button",{class:"btn-ghost",onClick:function(){state.docsView="list";renderDocs();}},"← Zurück"),
+      h("span",{class:"section-title",style:{marginBottom:"0"}},"Dokumente verwalten")
+    ));
 
-  // Dokumente Liste
+    // Dokument hinzufügen
+    var addBox = h("div", {class:"settings-card"});
+    addBox.appendChild(h("span",{class:"settings-label"},"Dokument hinzufügen"));
+    var dName = h("input",{class:"inp",placeholder:"Name (z.B. Aufstelldach Anleitung)…",style:{marginBottom:"8px"}});
+    var dDesc = h("input",{class:"inp",placeholder:"Beschreibung (optional)…",style:{marginBottom:"8px"}});
+    var dUrl  = h("input",{class:"inp",placeholder:"OneDrive- oder sonstiger Link…",style:{marginBottom:"8px"}});
+    function addDoc() {
+      var n=dName.value.trim(), u=dUrl.value.trim();
+      if(!n||!u) return;
+      state.docs.push({id:Date.now(), name:n, desc:dDesc.value.trim(), url:u});
+      dName.value=""; dDesc.value=""; dUrl.value="";
+      saveAll(); renderDocs();
+    }
+    dUrl.addEventListener("keydown",function(e){ if(e.key==="Enter") addDoc(); });
+    addBox.appendChild(dName);
+    addBox.appendChild(dDesc);
+    addBox.appendChild(dUrl);
+    addBox.appendChild(h("button",{class:"btn-accent",style:{width:"100%"},onClick:addDoc},"＋ Hinzufügen"));
+    content.appendChild(addBox);
+
+    // Bestehende Dokumente verwalten
+    if (state.docs.length > 0) {
+      content.appendChild(h("span",{class:"settings-label",style:{display:"block",marginBottom:"10px"}},"Gespeicherte Dokumente"));
+      state.docs.forEach(function(doc) {
+        content.appendChild(h("div",{class:"item-row"},
+          h("div",{class:"flex1"},
+            h("div",{class:"item-name"}, doc.name),
+            doc.desc ? h("div",{class:"item-cat"}, doc.desc) : h("span",null,"")
+          ),
+          h("button",{class:"btn-delete",onClick:function(){
+            state.docs = state.docs.filter(function(d){ return d.id !== doc.id; });
+            saveAll(); renderDocs();
+          }},"✕")
+        ));
+      });
+    }
+    return;
+  }
+
+  // ── Dokumentenliste ──
   if (state.docs.length === 0) {
-    content.appendChild(h("div",{class:"empty"},"Noch keine Dokumente. Füge dein erstes PDF hinzu!"));
+    content.appendChild(h("div",{class:"empty"},"Noch keine Dokumente vorhanden.
+Tippe oben auf ⚙ um Dokumente hinzuzufügen."));
   }
   state.docs.forEach(function(doc) {
-    var card = h("a", {class:"doc-card", href:doc.url, target:"_blank"},
+    content.appendChild(h("a", {class:"doc-card", href:doc.url, target:"_blank"},
       h("span", {class:"doc-icon"}, "📄"),
       h("div", {class:"flex1"},
         h("div", {class:"doc-name"}, doc.name),
         doc.desc ? h("div", {class:"doc-desc"}, doc.desc) : h("span",null,"")
       ),
       h("span", {class:"doc-arrow"}, "›")
-    );
-    // Löschen-Button
-    var delBtn = h("button",{class:"btn-delete",onClick:function(e){
-      e.preventDefault(); e.stopPropagation();
-      state.docs = state.docs.filter(function(d){ return d.id !== doc.id; });
-      saveAll(); renderDocs();
-    }},"✕");
-    card.appendChild(delBtn);
-    content.appendChild(card);
+    ));
   });
 }
 
