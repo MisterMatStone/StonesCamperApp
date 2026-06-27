@@ -153,6 +153,9 @@
 </div>
 
 <script>
+// ── GitHub API ───────────────────────────────────────────────────────────────
+var GITHUB_DOCS_API = "https://api.github.com/repos/mistermatstone/StonesCamperApp/contents/docs";
+
 // ── Firebase ──────────────────────────────────────────────────────────────────
 var FIREBASE_CONFIG = {
   apiKey: "AIzaSyDtCpaOGWBSejWQHri_m22qNgQydAF9MP4",
@@ -920,20 +923,48 @@ function renderDocs() {
     return;
   }
 
-  // ── Liste ──
-  if(state.docs.length===0){
-    content.appendChild(h("div",{class:"empty"},"Noch keine Dokumente vorhanden. Tippe oben auf ⚙ um Dokumente hinzuzufügen."));
-  }
-  state.docs.forEach(function(doc){
-    content.appendChild(h("a",{class:"doc-card",href:doc.url,target:"_blank"},
-      h("span",{class:"doc-icon"},"PDF"),
-      h("div",{class:"flex1"},
-        h("div",{class:"doc-name"},doc.name),
-        doc.desc?h("div",{class:"doc-desc"},doc.desc):h("span",null,"")
-      ),
-      h("span",{class:"doc-arrow"},"›")
-    ));
-  });
+  // ── Liste aus GitHub ──
+  var listContainer = h("div", null);
+  content.appendChild(listContainer);
+
+  // Lade-Indikator
+  listContainer.appendChild(h("div",{class:"empty"},"Dokumente werden geladen..."));
+
+  fetch(GITHUB_DOCS_API)
+    .then(function(r){ return r.json(); })
+    .then(function(files){
+      listContainer.innerHTML = "";
+      // Nur PDF-Dateien
+      var pdfs = files.filter(function(f){ return f.name.toLowerCase().endsWith(".pdf"); });
+      if(pdfs.length === 0){
+        listContainer.appendChild(h("div",{class:"empty"},"Keine PDFs im docs-Ordner gefunden."));
+        return;
+      }
+      pdfs.forEach(function(file){
+        // Name ohne .pdf Endung, Unterstriche durch Leerzeichen
+        var displayName = file.name.replace(/\.pdf$/i,"").replace(/_/g," ");
+        // GitHub Raw URL für direkten PDF-Aufruf
+        var pdfUrl = "https://mistermatstone.github.io/StonesCamperApp/docs/" + encodeURIComponent(file.name);
+        listContainer.appendChild(h("a",{class:"doc-card",href:pdfUrl,target:"_blank"},
+          h("span",{class:"doc-icon"},(function(){
+            var s=document.createElement("span");
+            s.innerHTML='<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#5a7c5a" stroke-width="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>';
+            return s;
+          })()),
+          h("div",{class:"flex1"},
+            h("div",{class:"doc-name"},displayName),
+            h("div",{class:"doc-desc"},file.size > 1024*1024
+              ? (file.size/1024/1024).toFixed(1)+" MB"
+              : Math.round(file.size/1024)+" KB")
+          ),
+          h("span",{class:"doc-arrow"},"›")
+        ));
+      });
+    })
+    .catch(function(){
+      listContainer.innerHTML = "";
+      listContainer.appendChild(h("div",{class:"empty"},"Fehler beim Laden der Dokumente. Bitte Internetverbindung prüfen."));
+    });
 }
 
 // ── Logo / Icon ──────────────────────────────────────────────────────────────
