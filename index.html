@@ -3,8 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-
-  <title>Camper Gewicht</title>
+  <title>StonesCamperApp</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;700&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
   <style>
@@ -12,16 +11,73 @@
     html, body { height: 100%; background: #f5f0e8; }
     body { font-family: 'DM Sans', sans-serif; color: #2c2416; overscroll-behavior: none; }
     button { cursor: pointer; border: none; background: none; font-family: inherit; font-size: inherit; }
-    input, select, textarea { font-family: inherit; }
-    input[type=number]::-webkit-inner-spin-button { opacity: 1; }
+    input, select { font-family: inherit; }
     ::-webkit-scrollbar { width: 4px; }
     ::-webkit-scrollbar-thumb { background: #b5a99066; border-radius: 4px; }
-    #app { max-width: 680px; margin: 0 auto; min-height: 100vh; }
+    .hidden { display: none !important; }
+    .flex1 { flex: 1; }
+    .mt4{margin-top:4px;} .mt8{margin-top:8px;} .mt10{margin-top:10px;}
+    .fw700{font-weight:700;}
+
+    /* ── Loading ── */
+    #loading { position: fixed; inset: 0; background: #f5f0e8; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; z-index: 200; }
+    #loading .logo { font-family: 'Fraunces', serif; font-size: 32px; font-weight: 700; color: #2c3e2d; }
+    #loading .spinner { width: 36px; height: 36px; border: 3px solid #e0d8cc; border-top-color: #5a7c5a; border-radius: 50%; animation: spin 0.8s linear infinite; }
+    #loading .load-status { font-size: 13px; color: #8a7a6a; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Shared ── */
+    .screen { max-width: 680px; margin: 0 auto; min-height: 100vh; }
     .header { background: #2c3e2d; color: #f0ebe0; padding: 20px 20px 16px; display: flex; justify-content: space-between; align-items: center; }
-    .header-title { font-family: 'Fraunces', serif; font-size: 26px; font-weight: 700; letter-spacing: -0.5px; }
-    .header-sub { font-size: 12px; opacity: 0.7; margin-top: 2px; }
+    .header-title { font-family: 'Fraunces', serif; font-size: 22px; font-weight: 700; letter-spacing: -0.5px; }
+    .header-sub { font-size: 11px; opacity: 0.7; margin-top: 2px; }
     .sync-indicator { font-size: 11px; opacity: 0.7; margin-top: 2px; }
     .settings-btn { font-size: 22px; color: #f0ebe0; padding: 4px; }
+    .back-btn { font-size: 22px; color: #f0ebe0; padding: 4px; }
+    .content { padding: 16px 16px 40px; }
+    .inp { padding: 10px 12px; border-radius: 8px; border: 1.5px solid #d8d0c4; font-size: 14px; background: #f8f4ee; outline: none; color: #2c2416; min-width: 0; width: 100%; }
+    .inp:focus { border-color: #5a7c5a; }
+    .add-btn { width: 42px; height: 42px; border-radius: 10px; background: #5a7c5a; color: #fff; font-size: 22px; font-weight: 700; flex-shrink: 0; }
+    .btn-ghost { padding: 8px 14px; border-radius: 8px; border: 1.5px solid #c0b8ac; font-size: 13px; color: #5a4a3a; background: transparent; font-weight: 500; }
+    .btn-accent { padding: 8px 14px; border-radius: 8px; background: #5a7c5a; color: #fff; font-size: 13px; font-weight: 600; }
+    .btn-delete { width: 32px; height: 32px; border-radius: 8px; background: #f5ece8; color: #c0392b; font-size: 14px; font-weight: 700; flex-shrink: 0; cursor: pointer; border: none; }
+    .btn-row { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+    .section-title { font-family: 'Fraunces', serif; font-size: 20px; font-weight: 700; margin-bottom: 12px; display: block; }
+    .section-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px; }
+    .settings-card { background: #fff; border-radius: 14px; padding: 18px; box-shadow: 0 1px 4px #00000012; margin-bottom: 12px; }
+    .settings-label { font-size: 14px; font-weight: 600; color: #3a3028; margin-bottom: 8px; display: block; }
+    .add-box { display: flex; gap: 8px; margin-bottom: 14px; align-items: center; background: #fff; padding: 12px; border-radius: 12px; flex-wrap: wrap; }
+    .item-row { display: flex; align-items: center; padding: 12px 14px; background: #fff; border-radius: 12px; margin-bottom: 8px; box-shadow: 0 1px 3px #00000010; gap: 10px; }
+    .item-name { font-size: 15px; font-weight: 500; }
+    .item-cat { font-size: 12px; color: #8a7a6a; margin-top: 2px; }
+    .item-weight { font-size: 15px; font-weight: 600; flex-shrink: 0; }
+    .selected-badge { font-size: 11px; background: #e8f0e8; color: #5a7c5a; padding: 2px 8px; border-radius: 10px; font-weight: 600; white-space: nowrap; }
+    .danger-card { background: #fff; border-radius: 14px; padding: 18px; box-shadow: 0 1px 4px #00000012; border: 1.5px solid #f0d0cc; }
+    .inline-edit { cursor: text; border-bottom: 1px dashed #b0a898; outline: none; min-width: 40px; }
+    .inline-edit-input { background: #f0ebe0; border: 1.5px solid #5a7c5a; border-radius: 6px; padding: 2px 6px; outline: none; color: #2c2416; font-family: inherit; }
+    .empty { color: #8a7a6a; font-size: 14px; padding: 24px 0; text-align: center; }
+    .hint { color: #8a7a6a; font-size: 12px; margin-top: 8px; text-align: center; }
+    .modal-overlay { position: fixed; inset: 0; background: #0006; display: flex; align-items: center; justify-content: center; z-index: 100; padding: 20px; }
+    .modal { background: #fff; border-radius: 16px; padding: 24px; max-width: 340px; width: 100%; box-shadow: 0 8px 32px #0003; }
+    .modal h3 { font-family: 'Fraunces', serif; font-size: 20px; font-weight: 700; margin-bottom: 10px; color: #c0392b; }
+    .modal p { font-size: 14px; color: #5a4a3a; line-height: 1.5; margin-bottom: 20px; }
+    .modal-btns { display: flex; gap: 10px; justify-content: flex-end; }
+    .color-over { color: #c0392b; } .color-warn { color: #e67e22; } .color-ok { color: #5a7c5a; }
+
+    /* ── Home Screen ── */
+    #home-screen { max-width: 680px; margin: 0 auto; min-height: 100vh; display: flex; flex-direction: column; }
+    .home-header { background: #2c3e2d; color: #f0ebe0; padding: 40px 24px 32px; display: flex; justify-content: space-between; align-items: flex-start; }
+    .home-app-name { font-family: 'Fraunces', serif; font-size: 34px; font-weight: 700; letter-spacing: -1px; line-height: 1.1; }
+    .home-app-sub { font-size: 13px; opacity: 0.6; margin-top: 6px; }
+    .home-modules { padding: 24px 16px; display: flex; flex-direction: column; gap: 14px; flex: 1; }
+    .module-btn { display: flex; align-items: center; gap: 18px; padding: 20px 22px; background: #fff; border-radius: 16px; box-shadow: 0 2px 8px #00000012; border: 2px solid transparent; transition: all 0.15s; text-align: left; width: 100%; cursor: pointer; font-family: inherit; }
+    .module-btn:hover { border-color: #5a7c5a; background: #f0f5f0; }
+    .module-icon { font-size: 40px; flex-shrink: 0; line-height: 1; }
+    .module-name { font-family: 'Fraunces', serif; font-size: 20px; font-weight: 700; color: #2c3e2d; }
+    .module-desc { font-size: 13px; color: #8a7a6a; margin-top: 3px; }
+    .module-arrow { font-size: 22px; color: #b0a898; margin-left: auto; flex-shrink: 0; }
+
+    /* ── Gewicht ── */
     .weight-card { background: #fff; padding: 20px 20px 14px; border-bottom: 1px solid #e0d8cc; }
     .weight-row { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 10px; }
     .weight-label { font-size: 11px; color: #8a7a6a; text-transform: uppercase; letter-spacing: 1px; }
@@ -35,102 +91,50 @@
     .nav { display: flex; background: #3d4e3e; padding: 6px 10px; gap: 4px; }
     .nav-btn { flex: 1; padding: 8px 2px; border-radius: 8px; color: #a0b5a0; font-size: 12px; font-weight: 500; transition: all 0.15s; }
     .nav-btn.active { background: #5a7c5a; color: #fff; }
-    .content { padding: 16px 16px 90px; }
-    .section-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px; }
-    .section-title { font-family: 'Fraunces', serif; font-size: 20px; font-weight: 700; margin-bottom: 12px; display: block; }
     .filter-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
-    .filter-chip { padding: 5px 12px; border-radius: 20px; font-size: 12px; background: #e8e0d4; color: #5a4a3a; font-weight: 500; transition: all 0.15s; }
+    .filter-chip { padding: 5px 12px; border-radius: 20px; font-size: 12px; background: #e8e0d4; color: #5a4a3a; font-weight: 500; }
     .filter-chip.active { background: #5a7c5a; color: #fff; }
-    .check-row { width: 100%; display: flex; align-items: center; gap: 12px; padding: 12px 14px; background: #fff; border-radius: 12px; margin-bottom: 8px; border: 2px solid transparent; transition: all 0.15s; box-shadow: 0 1px 3px #00000010; text-align: left; }
+    .check-row { width: 100%; display: flex; align-items: center; gap: 12px; padding: 12px 14px; background: #fff; border-radius: 12px; margin-bottom: 8px; border: 2px solid transparent; transition: all 0.15s; box-shadow: 0 1px 3px #00000010; text-align: left; cursor: pointer; }
     .check-row.checked { border-color: #5a7c5a; background: #f0f5f0; }
-    .checkbox { width: 26px; height: 26px; border-radius: 8px; border: 2px solid #c0b8ac; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.15s; font-size: 14px; color: transparent; }
+    .checkbox { width: 26px; height: 26px; border-radius: 8px; border: 2px solid #c0b8ac; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 14px; color: transparent; }
     .checkbox.checked { background: #5a7c5a; border-color: #5a7c5a; color: #fff; }
-    .item-name { font-size: 15px; font-weight: 500; }
-    .item-cat { font-size: 12px; color: #8a7a6a; margin-top: 2px; }
-    .item-weight { font-size: 15px; font-weight: 600; flex-shrink: 0; }
-    .add-box { display: flex; gap: 8px; margin-bottom: 14px; align-items: center; background: #fff; padding: 12px; border-radius: 12px; flex-wrap: wrap; }
-    .inp { padding: 10px 12px; border-radius: 8px; border: 1.5px solid #d8d0c4; font-size: 14px; background: #f8f4ee; outline: none; color: #2c2416; min-width: 0; width: 100%; }
-    .inp:focus { border-color: #5a7c5a; }
-    .add-btn { width: 42px; height: 42px; border-radius: 10px; background: #5a7c5a; color: #fff; font-size: 22px; font-weight: 700; flex-shrink: 0; }
-    .item-row { display: flex; align-items: center; padding: 12px 14px; background: #fff; border-radius: 12px; margin-bottom: 8px; box-shadow: 0 1px 3px #00000010; gap: 10px; }
-    .item-row .detail { font-size: 12px; color: #8a7a6a; margin-top: 3px; }
-    .selected-badge { font-size: 11px; background: #e8f0e8; color: #5a7c5a; padding: 2px 8px; border-radius: 10px; font-weight: 600; white-space: nowrap; }
-    .btn-ghost { padding: 8px 14px; border-radius: 8px; border: 1.5px solid #c0b8ac; font-size: 13px; color: #5a4a3a; background: transparent; font-weight: 500; }
-    .btn-accent { padding: 8px 14px; border-radius: 8px; background: #5a7c5a; color: #fff; font-size: 13px; font-weight: 600; }
-    .btn-delete { width: 32px; height: 32px; border-radius: 8px; background: #f5ece8; color: #c0392b; font-size: 14px; font-weight: 700; flex-shrink: 0; }
-    .btn-row { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+    .save-set-box { display: flex; gap: 8px; margin-bottom: 14px; align-items: center; background: #f0f5f0; padding: 12px; border-radius: 12px; border: 1.5px solid #5a7c5a; flex-wrap: wrap; }
     .set-card { background: #fff; border-radius: 14px; padding: 14px 16px; margin-bottom: 12px; box-shadow: 0 1px 4px #00000012; }
     .tag { padding: 3px 10px; border-radius: 20px; background: #e8e0d4; font-size: 11px; color: #5a4a3a; display: inline-block; }
     .tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px; }
-    .save-set-box { display: flex; gap: 8px; margin-bottom: 14px; align-items: center; background: #f0f5f0; padding: 12px; border-radius: 12px; border: 1.5px solid #5a7c5a; flex-wrap: wrap; }
     .history-card { background: #fff; border-radius: 12px; padding: 12px 14px; margin-bottom: 10px; box-shadow: 0 1px 3px #00000010; }
-    .settings-card { background: #fff; border-radius: 14px; padding: 18px; box-shadow: 0 1px 4px #00000012; margin-bottom: 12px; }
-    .settings-label { font-size: 14px; font-weight: 600; color: #3a3028; margin-bottom: 8px; display: block; }
-    .cat-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
-    .inline-edit { cursor: text; border-bottom: 1px dashed #b0a898; outline: none; min-width: 40px; }
-    .inline-edit-input { background: #f0ebe0; border: 1.5px solid #5a7c5a; border-radius: 6px; padding: 2px 6px; outline: none; color: #2c2416; font-family: inherit; }
     .basis-item { display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: #f8f4ee; border-radius: 10px; margin-bottom: 6px; border: 1.5px solid #e0d8cc; }
     .basis-total { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: #2c3e2d; color: #f0ebe0; border-radius: 10px; margin-top: 10px; font-weight: 600; font-size: 14px; }
-    .danger-card { background: #fff; border-radius: 14px; padding: 18px; box-shadow: 0 1px 4px #00000012; border: 1.5px solid #f0d0cc; }
-    .modal-overlay { position: fixed; inset: 0; background: #0006; display: flex; align-items: center; justify-content: center; z-index: 100; padding: 20px; }
-    .modal { background: #fff; border-radius: 16px; padding: 24px; max-width: 340px; width: 100%; box-shadow: 0 8px 32px #0003; }
-    .modal h3 { font-family: 'Fraunces', serif; font-size: 20px; font-weight: 700; margin-bottom: 10px; color: #c0392b; }
-    .modal p { font-size: 14px; color: #5a4a3a; line-height: 1.5; margin-bottom: 20px; }
-    .modal-btns { display: flex; gap: 10px; justify-content: flex-end; }
-    .empty { color: #8a7a6a; font-size: 14px; padding: 24px 0; text-align: center; }
-    .hint { color: #8a7a6a; font-size: 12px; margin-top: 8px; text-align: center; }
-    .color-over { color: #c0392b; } .color-warn { color: #e67e22; } .color-ok { color: #5a7c5a; }
-    .hidden { display: none !important; } .flex1 { flex: 1; }
-    .mt4{margin-top:4px;} .mt8{margin-top:8px;} .mt10{margin-top:10px;} .mt12{margin-top:12px;}
-    .fw700{font-weight:700;} .fs12{font-size:12px;}
-    #loading { position: fixed; inset: 0; background: #f5f0e8; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; z-index: 200; }
-    #loading .logo { font-family: 'Fraunces', serif; font-size: 32px; font-weight: 700; color: #2c3e2d; }
-    #loading .spinner { width: 36px; height: 36px; border: 3px solid #e0d8cc; border-top-color: #5a7c5a; border-radius: 50%; animation: spin 0.8s linear infinite; }
-    #loading .load-status { font-size: 13px; color: #8a7a6a; }
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    /* ── Bottom Navigation ── */
-    #bottom-nav { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 680px; background: #2c3e2d; display: flex; z-index: 50; }
-    .bnav-btn { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 10px 4px 14px; color: #a0b5a0; font-size: 10px; font-weight: 500; gap: 4px; transition: all 0.15s; border: none; background: none; cursor: pointer; font-family: inherit; }
-    .bnav-btn .bnav-icon { font-size: 22px; }
-    .bnav-btn.active { color: #fff; }
-    .bnav-btn.active .bnav-icon { filter: drop-shadow(0 0 4px rgba(255,255,255,0.4)); }
+    .cat-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
 
     /* ── Dokumente ── */
-    #docs-app { max-width: 680px; margin: 0 auto; min-height: 100vh; padding-bottom: 80px; }
-    .doc-card { display: flex; align-items: center; gap: 14px; padding: 14px 16px; background: #fff; border-radius: 12px; margin-bottom: 10px; box-shadow: 0 1px 3px #00000010; text-decoration: none; color: inherit; transition: all 0.15s; border: 2px solid transparent; }
+    .doc-card { display: flex; align-items: center; gap: 14px; padding: 14px 16px; background: #fff; border-radius: 12px; margin-bottom: 10px; box-shadow: 0 1px 3px #00000010; text-decoration: none; color: inherit; border: 2px solid transparent; transition: all 0.15s; }
     .doc-card:hover { border-color: #5a7c5a; background: #f0f5f0; }
     .doc-icon { font-size: 32px; flex-shrink: 0; }
     .doc-name { font-size: 15px; font-weight: 600; color: #2c2416; }
     .doc-desc { font-size: 12px; color: #8a7a6a; margin-top: 3px; }
     .doc-arrow { font-size: 18px; color: #b0a898; margin-left: auto; flex-shrink: 0; }
-    .doc-add-box { background: #fff; border-radius: 14px; padding: 16px; margin-bottom: 14px; box-shadow: 0 1px 4px #00000012; }
-    .doc-add-title { font-family: 'Fraunces', serif; font-size: 16px; font-weight: 700; margin-bottom: 12px; color: #2c3e2d; }
   </style>
 </head>
 <body>
 
+<!-- Loading -->
 <div id="loading">
-  <div class="logo">Camper Gewicht</div>
+  <div class="logo">StonesCamperApp</div>
   <div class="spinner"></div>
   <div class="load-status" id="load-status">Verbinde mit Datenbank…</div>
 </div>
 
-<div id="app" class="hidden"></div>
-<div id="docs-app" class="hidden"></div>
+<!-- Home Screen -->
+<div id="home-screen" style="display:none"></div>
 
-<!-- Bottom Navigation -->
-<div id="bottom-nav" style="display:none">
-  <button class="bnav-btn active" id="bnav-gewicht" onclick="switchSection('gewicht')">
-    <span class="bnav-icon">⚖️</span>
-    <span>Gewicht</span>
-  </button>
-  <button class="bnav-btn" id="bnav-dokumente" onclick="switchSection('dokumente')">
-    <span class="bnav-icon">📄</span>
-    <span>Dokumente</span>
-  </button>
-</div>
+<!-- Gewicht Screen -->
+<div id="gewicht-screen" style="display:none"></div>
 
+<!-- Dokumente Screen -->
+<div id="dokumente-screen" style="display:none"></div>
+
+<!-- Confirm Modal -->
 <div id="confirm-modal" class="modal-overlay hidden">
   <div class="modal">
     <h3>Zurücksetzen?</h3>
@@ -143,7 +147,7 @@
 </div>
 
 <script>
-// ── Firebase config (wird dynamisch geladen) ──────────────────────────────────
+// ── Firebase ──────────────────────────────────────────────────────────────────
 var FIREBASE_CONFIG = {
   apiKey: "AIzaSyDtCpaOGWBSejWQHri_m22qNgQydAF9MP4",
   authDomain: "stonescamperapp.firebaseapp.com",
@@ -152,16 +156,20 @@ var FIREBASE_CONFIG = {
   messagingSenderId: "264977884187",
   appId: "1:264977884187:web:9d324815cf05acec8944be"
 };
-var db  = null;
-var DOC = null;
+var db = null, DOC = null;
 
+// ── Defaults ──────────────────────────────────────────────────────────────────
 var MAX_WEIGHT = 3500;
 
 var DEFAULT_STATE = {
-  appName: "Camper Gewicht",
+  appName: "StonesCamperApp",
+  modules: [
+    { id: "gewicht",   name: "Camper Gewicht", icon: "⚖️",  desc: "Gewicht & Packlisten" },
+    { id: "dokumente", name: "Dokumente",       icon: "📄",  desc: "Handbücher & Anleitungen" }
+  ],
   baseWeights: [
     { id: 1, name: "Leergewicht Fahrzeug", weight: 3120 },
-    { id: 2, name: "Fahrer", weight: 80 },
+    { id: 2, name: "Fahrer", weight: 80 }
   ],
   categories: ["Camping","Küche","Sport","Schlafen","Kleidung","Technik","Wasser","Sonstiges"],
   items: [
@@ -172,59 +180,84 @@ var DEFAULT_STATE = {
     {id:5,name:"Werkzeugkasten",weight:8,category:"Technik",note:""},
     {id:6,name:"Gaskocher & Zubehör",weight:6,category:"Küche",note:""},
     {id:7,name:"Wassertank (voll)",weight:20,category:"Wasser",note:""},
-    {id:8,name:"Kleidung (2 Personen)",weight:10,category:"Kleidung",note:""},
+    {id:8,name:"Kleidung (2 Personen)",weight:10,category:"Kleidung",note:""}
   ],
   sets: [
     {id:1,name:"Wochenendtrip",itemIds:[1,3,4,8],note:""},
     {id:2,name:"Sommerreise",itemIds:[1,2,3,4,6,8],note:""},
-    {id:3,name:"Herbstreise",itemIds:[2,3,4,5,6,7,8],note:""},
+    {id:3,name:"Herbstreise",itemIds:[2,3,4,5,6,7,8],note:""}
   ],
   history: [],
-  docs: [],
+  docs: []
 };
 
+// ── State ─────────────────────────────────────────────────────────────────────
 var state = {
   appName:     DEFAULT_STATE.appName,
+  modules:     JSON.parse(JSON.stringify(DEFAULT_STATE.modules)),
   baseWeights: JSON.parse(JSON.stringify(DEFAULT_STATE.baseWeights)),
-  categories:  [...DEFAULT_STATE.categories],
+  categories:  DEFAULT_STATE.categories.slice(),
   items:       JSON.parse(JSON.stringify(DEFAULT_STATE.items)),
   sets:        JSON.parse(JSON.stringify(DEFAULT_STATE.sets)),
   history:     [],
   docs:        [],
-  selected:    new Set(),
-  view:        "checklist",
-  filterCat:   "Alle",
-  section:     "gewicht",
-  docsView:    "list",
-  syncStatus:  "Verbindet…",
+  // UI state
+  currentScreen: "home",
+  gewichtView:   "checklist",
+  filterCat:     "Alle",
+  docsView:      "list",
+  syncStatus:    "Verbindet…",
+  selected:      new Set()
 };
+
+// ── Persistence ───────────────────────────────────────────────────────────────
+function getPersistedData() {
+  return {
+    appName:     state.appName,
+    modules:     state.modules,
+    baseWeights: state.baseWeights,
+    categories:  state.categories,
+    items:       state.items,
+    sets:        state.sets,
+    history:     state.history,
+    docs:        state.docs
+  };
+}
+
+function applyData(d) {
+  state.appName     = d.appName     || DEFAULT_STATE.appName;
+  state.modules     = d.modules     || JSON.parse(JSON.stringify(DEFAULT_STATE.modules));
+  state.baseWeights = d.baseWeights || JSON.parse(JSON.stringify(DEFAULT_STATE.baseWeights));
+  state.categories  = d.categories  || DEFAULT_STATE.categories.slice();
+  state.items       = d.items       || JSON.parse(JSON.stringify(DEFAULT_STATE.items));
+  state.sets        = d.sets        || JSON.parse(JSON.stringify(DEFAULT_STATE.sets));
+  state.history     = d.history     || [];
+  state.docs        = d.docs        || [];
+}
+
+function saveToLocalStorage() {
+  try { localStorage.setItem("stones_state", JSON.stringify(getPersistedData())); } catch(e) {}
+}
+
+function loadFromLocalStorage() {
+  try {
+    var s = localStorage.getItem("stones_state");
+    if (s) applyData(JSON.parse(s));
+  } catch(e) {}
+}
 
 var saveTimeout = null;
 function saveAll() {
-  // Sofort in localStorage speichern
   saveToLocalStorage();
-  // Firebase im Hintergrund
   clearTimeout(saveTimeout);
   state.syncStatus = "Speichert…";
   updateSyncIndicator();
   saveTimeout = setTimeout(function() {
-    if (!DOC) {
-      state.syncStatus = "⚠ Offline";
-      updateSyncIndicator();
-      return;
-    }
-    DOC.set({
-      appName:     state.appName,
-      baseWeights: state.baseWeights,
-      categories:  state.categories,
-      items:       state.items,
-      sets:        state.sets,
-      history:     state.history,
-      docs:        state.docs,
-    }).then(function() {
+    if (!DOC) { state.syncStatus = "⚠ Offline"; updateSyncIndicator(); return; }
+    DOC.set(getPersistedData()).then(function() {
       state.syncStatus = "✓ Gespeichert";
       updateSyncIndicator();
-    }).catch(function(e) {
+    }).catch(function() {
       state.syncStatus = "⚠ Offline";
       updateSyncIndicator();
     });
@@ -232,20 +265,21 @@ function saveAll() {
 }
 
 function updateSyncIndicator() {
-  const el = document.querySelector(".sync-indicator");
-  if (el) el.textContent = state.syncStatus;
+  document.querySelectorAll(".sync-indicator").forEach(function(el) {
+    el.textContent = state.syncStatus;
+  });
 }
 
 // ── Computed ──────────────────────────────────────────────────────────────────
-function baseWeight()     { return state.baseWeights.reduce((s,b) => s+b.weight, 0); }
-function selectedWeight() { return state.items.filter(i => state.selected.has(i.id)).reduce((s,i) => s+i.weight, 0); }
+function baseWeight()     { return state.baseWeights.reduce(function(s,b){ return s+b.weight; }, 0); }
+function selectedWeight() { return state.items.filter(function(i){ return state.selected.has(i.id); }).reduce(function(s,i){ return s+i.weight; }, 0); }
 function totalWeight()    { return baseWeight() + selectedWeight(); }
 function remaining()      { return MAX_WEIGHT - totalWeight(); }
 
 // ── DOM helpers ───────────────────────────────────────────────────────────────
 function h(tag, attrs) {
-  const el = document.createElement(tag);
-  const children = Array.prototype.slice.call(arguments, 2).flat();
+  var el = document.createElement(tag);
+  var children = Array.prototype.slice.call(arguments, 2).flat(Infinity);
   if (attrs) {
     for (var k in attrs) {
       var v = attrs[k];
@@ -262,24 +296,21 @@ function h(tag, attrs) {
   return el;
 }
 
-function inlineEdit(value, onSave, cls) {
-  var span = h("span", {class: "inline-edit " + (cls||""), title: "Tippen zum Bearbeiten"}, value);
+function inlineEdit(value, onSave) {
+  var span = h("span", {class:"inline-edit", title:"Tippen zum Bearbeiten"}, value);
   span.addEventListener("click", function() {
-    var inp = h("input", {class: "inline-edit-input", value: value});
-    inp.style.fontSize = "inherit";
-    inp.style.fontWeight = "inherit";
-    inp.style.fontFamily = "inherit";
-    inp.style.width = Math.max(value.length * 10, 80) + "px";
+    var inp = h("input", {class:"inline-edit-input", value:value});
+    inp.style.cssText = "font-size:inherit;font-weight:inherit;font-family:inherit;width:" + Math.max(value.length*10, 80) + "px";
     function commit() {
       var v = inp.value.trim();
-      if (v) onSave(v);
+      if (v) { onSave(v); value = v; }
       inp.replaceWith(span);
-      span.textContent = v || value;
+      span.textContent = value;
     }
     inp.addEventListener("blur", commit);
     inp.addEventListener("keydown", function(e) {
-      if (e.key === "Enter") { e.preventDefault(); commit(); }
-      if (e.key === "Escape") inp.replaceWith(span);
+      if (e.key==="Enter") { e.preventDefault(); commit(); }
+      if (e.key==="Escape") inp.replaceWith(span);
     });
     span.replaceWith(inp);
     inp.focus(); inp.select();
@@ -287,65 +318,192 @@ function inlineEdit(value, onSave, cls) {
   return span;
 }
 
-// ── Render ────────────────────────────────────────────────────────────────────
-function render() {
-  var app = document.getElementById("app");
+// ── Navigation ────────────────────────────────────────────────────────────────
+function showScreen(name) {
+  ["home-screen","gewicht-screen","dokumente-screen"].forEach(function(id) {
+    document.getElementById(id).style.display = "none";
+  });
+  state.currentScreen = name;
+  var el = document.getElementById(name + "-screen");
+  el.style.display = "block";
+  if (name === "home")      renderHome();
+  if (name === "gewicht")   renderGewicht();
+  if (name === "dokumente") { renderDocs(); }
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// HOME SCREEN
+// ══════════════════════════════════════════════════════════════════════════════
+function renderHome() {
+  var app = document.getElementById("home-screen");
   app.innerHTML = "";
 
-  var tw  = totalWeight();
-  var bw  = baseWeight();
-  var sw  = selectedWeight();
-  var rem = remaining();
-  var pct = Math.min((tw / MAX_WEIGHT) * 100, 100);
-  var isOver = tw > MAX_WEIGHT;
-  var isWarn = rem < 100 && !isOver;
-  var barColor = isOver ? "#c0392b" : isWarn ? "#e67e22" : "#5a7c5a";
-  var remColor = isOver ? "color-over" : isWarn ? "color-warn" : "color-ok";
-  var twColor  = isOver ? "#c0392b"   : isWarn ? "#e67e22"    : "#2c3e2d";
+  app.appendChild(h("div", {class:"home-header"},
+    h("div", null,
+      h("div", {class:"home-app-name"}, state.appName),
+      h("div", {class:"home-app-sub"}, state.syncStatus)
+    ),
+    h("button", {class:"settings-btn", onClick: function(){ renderHomeSettings(); }}, "⚙")
+  ));
+
+  var modules = h("div", {class:"home-modules"});
+  state.modules.forEach(function(mod) {
+    modules.appendChild(h("button", {class:"module-btn", onClick: function(){ showScreen(mod.id); }},
+      h("span", {class:"module-icon"}, mod.icon),
+      h("div", {class:"flex1"},
+        h("div", {class:"module-name"}, mod.name),
+        h("div", {class:"module-desc"}, mod.desc)
+      ),
+      h("span", {class:"module-arrow"}, "›")
+    ));
+  });
+  app.appendChild(modules);
+}
+
+function renderHomeSettings() {
+  var app = document.getElementById("home-screen");
+  app.innerHTML = "";
 
   app.appendChild(h("div", {class:"header"},
     h("div", null,
       h("div", {class:"header-title"}, state.appName),
-      h("div", {class:"header-sub"}, "Max. " + MAX_WEIGHT + " kg · Basis: " + bw + " kg"),
-      h("div", {class:"sync-indicator"}, state.syncStatus)
+      h("div", {class:"header-sub"}, "Globale Einstellungen")
     ),
-    h("button", {class:"settings-btn", onClick: function(){ state.view="settings"; render(); }}, "⚙")
-  ));
-
-  app.appendChild(h("div", {class:"weight-card"},
-    h("div", {class:"weight-row"},
-      h("div", null,
-        h("div", {class:"weight-label"}, "Gesamtgewicht"),
-        h("div", {class:"weight-value", style:{color:twColor}}, tw.toFixed(1), h("span",{class:"weight-unit"}," kg"))
-      ),
-      h("div", null,
-        h("div", {class:"weight-label"}, isOver ? "🚫 Überladen!" : isWarn ? "⚠ Fast voll" : "Noch frei"),
-        h("div", {class:"remain-value " + remColor}, (isOver?"+":"") + Math.abs(rem).toFixed(1) + " kg")
-      )
-    ),
-    h("div", {class:"bar-track"}, h("div", {class:"bar-fill", style:{width:pct+"%", background:barColor}})),
-    h("div", {class:"bar-labels"},
-      h("span",{class:"bar-label"},"Basis: " + bw + " kg"),
-      h("span",{class:"bar-label"},"Zuladung: +" + sw + " kg · " + state.selected.size + " Pos."),
-      h("span",{class:"bar-label"},"Max: " + MAX_WEIGHT + " kg")
-    )
-  ));
-
-  var navItems = [["checklist","✓ Checkliste"],["items","📦 Positionen"],["sets","📂 Sets"],["history","📋 Verlauf"]];
-  app.appendChild(h("div",{class:"nav"},
-    ...navItems.map(function(x) {
-      return h("button",{class:"nav-btn"+(state.view===x[0]?" active":""), onClick:(function(v){ return function(){ state.view=v; render(); }; })(x[0])}, x[1]);
-    })
+    h("button", {class:"back-btn", onClick: function(){ renderHome(); }}, "✕")
   ));
 
   var content = h("div", {class:"content"});
   app.appendChild(content);
 
-  // ══ CHECKLIST ══
-  if (state.view === "checklist") {
+  // App-Name
+  var nameInp = h("input", {class:"inp", value:state.appName, placeholder:"App-Name…"});
+  nameInp.addEventListener("input", function() {
+    state.appName = nameInp.value;
+    saveAll();
+    document.getElementById("loading").querySelector(".logo").textContent = state.appName;
+    document.title = state.appName;
+  });
+  content.appendChild(h("div", {class:"settings-card"},
+    h("span", {class:"settings-label"}, "Name der App"),
+    nameInp,
+    h("div", {class:"item-cat mt4"}, "Wird auf der Startseite angezeigt")
+  ));
+
+  // Module
+  var modCard = h("div", {class:"settings-card"});
+  modCard.appendChild(h("span", {class:"settings-label"}, "Module"));
+  modCard.appendChild(h("div", {class:"item-cat", style:{marginBottom:"12px"}}, "Name und Icon der Module anpassen"));
+
+  state.modules.forEach(function(mod) {
+    var nameEl = inlineEdit(mod.name, function(v){ mod.name=v; saveAll(); });
+    nameEl.style.cssText = "flex:1;font-size:14px;font-weight:600;color:#2c2416;";
+    var iconEl = inlineEdit(mod.icon, function(v){ mod.icon=v; saveAll(); });
+    iconEl.style.cssText = "font-size:24px;cursor:pointer;";
+    var descEl = inlineEdit(mod.desc || "", function(v){ mod.desc=v; saveAll(); });
+    descEl.style.cssText = "font-size:12px;color:#8a7a6a;";
+
+    modCard.appendChild(h("div", {class:"basis-item"},
+      iconEl,
+      h("div", {class:"flex1", style:{marginLeft:"8px"}},
+        nameEl,
+        descEl
+      )
+    ));
+  });
+  content.appendChild(modCard);
+
+  // Backup & Export
+  var backupCard = h("div", {class:"settings-card"});
+  backupCard.appendChild(h("span", {class:"settings-label"}, "Backup & Export"));
+  backupCard.appendChild(h("div", {class:"item-cat", style:{marginBottom:"12px"}}, "Daten sichern oder in neuem Browser wiederherstellen"));
+
+  // JSON Export
+  backupCard.appendChild(h("button", {class:"btn-accent", style:{width:"100%",marginBottom:"8px"}, onClick: exportJSON}, "⬇ Backup herunterladen (JSON)"));
+
+  // JSON Import
+  var fileInp = document.createElement("input");
+  fileInp.type = "file"; fileInp.accept = ".json"; fileInp.style.display = "none";
+  fileInp.addEventListener("change", function(e){ if(e.target.files[0]) importJSON(e.target.files[0]); });
+  backupCard.appendChild(fileInp);
+  backupCard.appendChild(h("button", {class:"btn-ghost", style:{width:"100%",marginBottom:"8px"}, onClick: function(){ fileInp.click(); }}, "⬆ Backup wiederherstellen (JSON)"));
+
+  // PDF Export
+  backupCard.appendChild(h("button", {class:"btn-ghost", style:{width:"100%"}, onClick: exportPDF}, "📄 Daten als PDF exportieren"));
+
+  backupCard.appendChild(h("div", {class:"hint"}, "JSON-Backup enthält alle Daten und kann jederzeit wiederhergestellt werden"));
+  content.appendChild(backupCard);
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// GEWICHT SCREEN
+// ══════════════════════════════════════════════════════════════════════════════
+function renderGewicht() {
+  var app = document.getElementById("gewicht-screen");
+  app.innerHTML = "";
+
+  var mod = state.modules.find(function(m){ return m.id==="gewicht"; }) || {};
+  var tw  = totalWeight(), bw = baseWeight(), sw = selectedWeight(), rem = remaining();
+  var pct = Math.min((tw/MAX_WEIGHT)*100, 100);
+  var isOver = tw > MAX_WEIGHT, isWarn = rem < 100 && !isOver;
+  var barColor = isOver ? "#c0392b" : isWarn ? "#e67e22" : "#5a7c5a";
+  var remColor = isOver ? "color-over" : isWarn ? "color-warn" : "color-ok";
+  var twColor  = isOver ? "#c0392b"   : isWarn ? "#e67e22"   : "#2c3e2d";
+
+  // Header
+  var headerLeft = h("div", null,
+    h("div", {class:"header-title"}, state.appName + " – " + (mod.name||"Gewicht")),
+    h("div", {class:"header-sub"}, "Max. " + MAX_WEIGHT + " kg · Basis: " + bw + " kg"),
+    h("div", {class:"sync-indicator"}, state.syncStatus)
+  );
+  app.appendChild(h("div", {class:"header"},
+    headerLeft,
+    h("div", {style:{display:"flex",gap:"8px",alignItems:"center"}},
+      h("button", {class:"back-btn", onClick: function(){ showScreen("home"); }}, "🏠"),
+      state.gewichtView !== "settings"
+        ? h("button", {class:"settings-btn", onClick: function(){ state.gewichtView="settings"; renderGewicht(); }}, "⚙")
+        : h("span", null, "")
+    )
+  ));
+
+  // Weight card (nur wenn nicht Settings)
+  if (state.gewichtView !== "settings") {
+    app.appendChild(h("div", {class:"weight-card"},
+      h("div", {class:"weight-row"},
+        h("div", null,
+          h("div", {class:"weight-label"}, "Gesamtgewicht"),
+          h("div", {class:"weight-value", style:{color:twColor}}, tw.toFixed(1), h("span",{class:"weight-unit"}," kg"))
+        ),
+        h("div", null,
+          h("div", {class:"weight-label"}, isOver?"🚫 Überladen!":isWarn?"⚠ Fast voll":"Noch frei"),
+          h("div", {class:"remain-value "+remColor}, (isOver?"+":"") + Math.abs(rem).toFixed(1) + " kg")
+        )
+      ),
+      h("div", {class:"bar-track"}, h("div", {class:"bar-fill", style:{width:pct+"%",background:barColor}})),
+      h("div", {class:"bar-labels"},
+        h("span",{class:"bar-label"},"Basis: "+bw+" kg"),
+        h("span",{class:"bar-label"},"Zuladung: +"+sw+" kg · "+state.selected.size+" Pos."),
+        h("span",{class:"bar-label"},"Max: "+MAX_WEIGHT+" kg")
+      )
+    ));
+
+    // Sub-Nav
+    var navItems = [["checklist","✓ Checkliste"],["items","📦 Positionen"],["sets","📂 Sets"],["history","📋 Verlauf"]];
+    app.appendChild(h("div",{class:"nav"},
+      navItems.map(function(x){
+        return h("button",{class:"nav-btn"+(state.gewichtView===x[0]?" active":""),
+          onClick:(function(v){ return function(){ state.gewichtView=v; renderGewicht(); }; })(x[0])}, x[1]);
+      })
+    ));
+  }
+
+  var content = h("div", {class:"content", style:{paddingBottom:"40px"}});
+  app.appendChild(content);
+
+  // ── CHECKLIST ──
+  if (state.gewichtView === "checklist") {
     var btnRow = h("div", {class:"btn-row"},
-      h("button",{class:"btn-ghost",onClick:function(){state.selected=new Set();render();}},"Alle ab"),
-      h("button",{class:"btn-ghost",onClick:function(){state.selected=new Set(state.items.map(function(i){return i.id;}));render();}},"Alle an")
+      h("button",{class:"btn-ghost",onClick:function(){state.selected=new Set();renderGewicht();}},"Alle ab"),
+      h("button",{class:"btn-ghost",onClick:function(){state.selected=new Set(state.items.map(function(i){return i.id;}));renderGewicht();}},"Alle an")
     );
     if (state.selected.size > 0) {
       btnRow.appendChild(h("button",{class:"btn-accent",onClick:showSaveSet},"Als Set speichern"));
@@ -358,34 +516,31 @@ function render() {
     var saveSetBox = h("div",{class:"save-set-box hidden",id:"save-set-box"});
     var ssnInput = h("input",{class:"inp",placeholder:"Name des Sets…",style:{flex:"2 1 120px"}});
     var ssnNote  = h("input",{class:"inp",placeholder:"Notiz (optional)…",style:{flex:"3 1 140px"}});
-    saveSetBox.appendChild(ssnInput);
-    saveSetBox.appendChild(ssnNote);
+    saveSetBox.appendChild(ssnInput); saveSetBox.appendChild(ssnNote);
     saveSetBox.appendChild(h("button",{class:"btn-accent",onClick:function(){
-      var n=ssnInput.value.trim();
-      if(!n||state.selected.size===0) return;
-      state.sets.push({id:Date.now(),name:n,itemIds:[...state.selected],note:ssnNote.value.trim()});
-      saveAll(); render();
+      var n=ssnInput.value.trim(); if(!n||state.selected.size===0) return;
+      state.sets.push({id:Date.now(),name:n,itemIds:Array.from(state.selected),note:ssnNote.value.trim()});
+      saveAll(); renderGewicht();
     }},"Speichern"));
     saveSetBox.appendChild(h("button",{class:"btn-ghost",onClick:function(){saveSetBox.classList.add("hidden");}},"✕"));
     content.appendChild(saveSetBox);
-    function showSaveSet() { saveSetBox.classList.remove("hidden"); ssnInput.focus(); }
+    function showSaveSet(){ saveSetBox.classList.remove("hidden"); ssnInput.focus(); }
 
     var usedCats = ["Alle"].concat(state.categories.filter(function(c){ return state.items.some(function(i){ return i.category===c; }); }));
     content.appendChild(h("div",{class:"filter-row"},
-      ...usedCats.map(function(c){
+      usedCats.map(function(c){
         return h("button",{class:"filter-chip"+(state.filterCat===c?" active":""),
-          onClick:(function(cat){ return function(){ state.filterCat=cat; render(); }; })(c)},c);
+          onClick:(function(cat){ return function(){ state.filterCat=cat; renderGewicht(); }; })(c)},c);
       })
     ));
 
     var filtered = state.filterCat==="Alle" ? state.items : state.items.filter(function(i){ return i.category===state.filterCat; });
     if (filtered.length===0) content.appendChild(h("div",{class:"empty"},"Keine Positionen in dieser Kategorie."));
-    filtered.forEach(function(item) {
+    filtered.forEach(function(item){
       var isChecked = state.selected.has(item.id);
-      content.appendChild(h("button",{class:"check-row"+(isChecked?" checked":""),onClick:(function(it,chk){ return function(){
-        chk ? state.selected.delete(it.id) : state.selected.add(it.id); render();
-      }; })(item,isChecked)},
-        h("div",{class:"checkbox"+(isChecked?" checked":"")}, isChecked?"✓":""),
+      content.appendChild(h("button",{class:"check-row"+(isChecked?" checked":""),
+        onClick:(function(it,chk){ return function(){ chk?state.selected.delete(it.id):state.selected.add(it.id); renderGewicht(); }; })(item,isChecked)},
+        h("div",{class:"checkbox"+(isChecked?" checked":"")},isChecked?"✓":""),
         h("div",{class:"flex1"},
           h("div",{class:"item-name"},item.name),
           h("div",{class:"item-cat"},item.category+(item.note?" · "+item.note:""))
@@ -395,45 +550,41 @@ function render() {
     });
   }
 
-  // ══ ITEMS ══
-  if (state.view === "items") {
+  // ── ITEMS ──
+  if (state.gewichtView === "items") {
     content.appendChild(h("span",{class:"section-title"},"Positionen verwalten"));
-    var iName   = h("input",{class:"inp",placeholder:"Name…",style:{flex:"2 1 120px"}});
-    var iWeight = h("input",{class:"inp",placeholder:"kg",type:"number",step:"0.1",style:{flex:"1 1 60px"}});
-    var iCat    = h("select",{class:"inp",style:{flex:"1.5 1 90px"}});
+    var iName=h("input",{class:"inp",placeholder:"Name…",style:{flex:"2 1 120px"}});
+    var iWeight=h("input",{class:"inp",placeholder:"kg",type:"number",step:"0.1",style:{flex:"1 1 60px"}});
+    var iCat=h("select",{class:"inp",style:{flex:"1.5 1 90px"}});
     state.categories.forEach(function(c){ var o=document.createElement("option"); o.value=c; o.textContent=c; iCat.appendChild(o); });
-    var iNote = h("input",{class:"inp",placeholder:"Notiz (opt.)…",style:{flex:"2 1 100px"}});
-    var addBox = h("div",{class:"add-box"});
+    var iNote=h("input",{class:"inp",placeholder:"Notiz (opt.)…",style:{flex:"2 1 100px"}});
+    var addBox=h("div",{class:"add-box"});
     addBox.appendChild(iName); addBox.appendChild(iWeight); addBox.appendChild(iCat); addBox.appendChild(iNote);
     addBox.appendChild(h("button",{class:"add-btn",onClick:function(){
-      var n=iName.value.trim(), w=parseFloat(iWeight.value);
-      if(!n||isNaN(w)) return;
+      var n=iName.value.trim(),w=parseFloat(iWeight.value); if(!n||isNaN(w)) return;
       state.items.push({id:Date.now(),name:n,weight:w,category:iCat.value,note:iNote.value.trim()});
-      saveAll(); render();
+      saveAll(); renderGewicht();
     }},"＋"));
     content.appendChild(addBox);
-
     state.items.forEach(function(item){
-      var nameEl = inlineEdit(item.name, function(v){item.name=v;saveAll();});
-      var wEl    = inlineEdit(String(item.weight), function(v){var n=parseFloat(v);if(!isNaN(n)){item.weight=n;saveAll();}});
+      var nameEl=inlineEdit(item.name,function(v){item.name=v;saveAll();});
+      var wEl=inlineEdit(String(item.weight),function(v){var n=parseFloat(v);if(!isNaN(n)){item.weight=n;saveAll();}});
       wEl.style.cssText="font-weight:600;font-size:12px;color:#5a4a3a;";
-      var catSel = document.createElement("select");
+      var catSel=document.createElement("select");
       catSel.style.cssText="font-size:12px;background:none;border:none;color:#8a7a6a;padding:0;outline:none;font-family:inherit;";
       state.categories.forEach(function(c){ var o=document.createElement("option"); o.value=c; o.textContent=c; if(c===item.category)o.selected=true; catSel.appendChild(o); });
       catSel.addEventListener("change",function(){item.category=catSel.value;saveAll();});
-      var detail = h("div",{class:"detail"});
+      var detail=h("div",{style:{fontSize:"12px",color:"#8a7a6a",marginTop:"3px"}});
       detail.appendChild(wEl); detail.appendChild(document.createTextNode(" kg · ")); detail.appendChild(catSel);
-      if(item.note) detail.appendChild(h("span",null," · "+item.note));
-      var isActive = state.selected.has(item.id);
       content.appendChild(h("div",{class:"item-row"},
-        h("div",{class:"flex1"}, nameEl, detail),
+        h("div",{class:"flex1"},nameEl,detail),
         h("div",{style:{display:"flex",gap:"6px",alignItems:"center"}},
-          isActive ? h("span",{class:"selected-badge"},"✓ aktiv") : document.createTextNode(""),
+          state.selected.has(item.id)?h("span",{class:"selected-badge"},"✓ aktiv"):h("span",null,""),
           h("button",{class:"btn-delete",onClick:(function(it){ return function(){
             state.items=state.items.filter(function(i){return i.id!==it.id;});
             state.selected.delete(it.id);
             state.sets=state.sets.map(function(s){return Object.assign({},s,{itemIds:s.itemIds.filter(function(x){return x!==it.id;})});});
-            saveAll(); render();
+            saveAll(); renderGewicht();
           }; })(item)},"✕")
         )
       ));
@@ -441,130 +592,93 @@ function render() {
     content.appendChild(h("div",{class:"hint"},"Namen und Gewichte direkt antippen zum Bearbeiten"));
   }
 
-  // ══ SETS ══
-  if (state.view === "sets") {
+  // ── SETS ──
+  if (state.gewichtView === "sets") {
     content.appendChild(h("span",{class:"section-title"},"Gespeicherte Sets"));
     if (state.sets.length===0) content.appendChild(h("div",{class:"empty"},"Noch keine Sets gespeichert."));
     state.sets.forEach(function(set){
-      var setItems = state.items.filter(function(i){ return set.itemIds.includes(i.id); });
-      var setW = setItems.reduce(function(s,i){return s+i.weight;},0);
-      var tot  = baseWeight() + setW;
-      var ok   = tot <= MAX_WEIGHT;
-      var nameEl = inlineEdit(set.name, function(v){set.name=v;saveAll();});
+      var setItems=state.items.filter(function(i){return set.itemIds.includes(i.id);});
+      var setW=setItems.reduce(function(s,i){return s+i.weight;},0);
+      var tot=baseWeight()+setW, ok=tot<=MAX_WEIGHT;
+      var nameEl=inlineEdit(set.name,function(v){set.name=v;saveAll();});
       nameEl.style.cssText="font-family:'Fraunces',serif;font-size:18px;font-weight:700;";
-      var noteEl = set.note
-        ? inlineEdit(set.note, function(v){set.note=v;saveAll();})
-        : h("button",{class:"btn-ghost",style:{fontSize:"11px",padding:"3px 8px",marginTop:"4px"},
-            onClick:(function(s){ return function(){s.note="Notiz…";saveAll();render();}; })(set)},"+Notiz");
-      if (set.note) noteEl.style.cssText="font-size:12px;color:#8a7a6a;font-style:italic;";
       content.appendChild(h("div",{class:"set-card"},
         h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:"10px"}},
-          h("div",{class:"flex1"}, nameEl,
-            h("div",{class:"item-cat"},setItems.length+" Positionen · +"+setW+" kg Zuladung"),
-            h("div",{class:"item-cat fw700",style:{color:ok?"#5a7c5a":"#c0392b"}},"Gesamt: "+tot.toFixed(1)+" kg "+(ok?"✓":"⚠ Überladen!")),
-            noteEl
+          h("div",{class:"flex1"},nameEl,
+            h("div",{class:"item-cat"},setItems.length+" Positionen · +"+setW+" kg"),
+            h("div",{class:"item-cat fw700",style:{color:ok?"#5a7c5a":"#c0392b"}},"Gesamt: "+tot.toFixed(1)+" kg "+(ok?"✓":"⚠ Überladen!"))
           ),
           h("div",{style:{display:"flex",flexDirection:"column",gap:"6px",flexShrink:"0"}},
-            h("button",{class:"btn-accent",onClick:(function(s){ return function(){state.selected=new Set(s.itemIds);state.view="checklist";render();}; })(set)},"Laden"),
-            h("button",{class:"btn-delete",onClick:(function(s){ return function(){state.sets=state.sets.filter(function(x){return x.id!==s.id;});saveAll();render();}; })(set)},"✕")
+            h("button",{class:"btn-accent",onClick:(function(s){ return function(){state.selected=new Set(s.itemIds);state.gewichtView="checklist";renderGewicht();}; })(set)},"Laden"),
+            h("button",{class:"btn-delete",onClick:(function(s){ return function(){state.sets=state.sets.filter(function(x){return x.id!==s.id;});saveAll();renderGewicht();}; })(set)},"✕")
           )
         ),
-        h("div",{class:"tags"}, ...setItems.map(function(i){return h("span",{class:"tag"},i.name);}))
+        h("div",{class:"tags"},setItems.map(function(i){return h("span",{class:"tag"},i.name);}))
       ));
     });
-    content.appendChild(h("div",{class:"hint"},"Set-Namen direkt antippen zum Umbenennen"));
   }
 
-  // ══ HISTORY ══
-  if (state.view === "history") {
+  // ── HISTORY ──
+  if (state.gewichtView === "history") {
     content.appendChild(h("div",{class:"section-row"},
       h("span",{class:"section-title",style:{marginBottom:"0"}},"Fahrtenverlauf"),
-      state.history.length>0 ? h("button",{class:"btn-ghost",onClick:function(){state.history=[];saveAll();render();}},"Alles löschen") : h("span",null,"")
+      state.history.length>0?h("button",{class:"btn-ghost",onClick:function(){state.history=[];saveAll();renderGewicht();}},"Alles löschen"):h("span",null,"")
     ));
     if (state.history.length===0) content.appendChild(h("div",{class:"empty"},"Noch keine Fahrten gespeichert."));
     state.history.forEach(function(e){
-      var ok = e.totalWeight <= MAX_WEIGHT;
+      var ok=e.totalWeight<=MAX_WEIGHT;
       content.appendChild(h("div",{class:"history-card"},
         h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center"}},
           h("div",{style:{fontFamily:"'Fraunces',serif",fontSize:"17px",fontWeight:"700"}},e.date),
           h("div",{style:{fontSize:"14px",fontWeight:"700",color:ok?"#5a7c5a":"#c0392b"}},e.totalWeight.toFixed(1)+" kg")
         ),
         h("div",{class:"item-cat"},e.count+" Positionen · Zuladung: +"+e.selectedWeight+" kg"),
-        h("div",{class:"tags"}, ...e.itemNames.map(function(n){return h("span",{class:"tag"},n);}))
+        h("div",{class:"tags"},e.itemNames.map(function(n){return h("span",{class:"tag"},n);}))
       ));
     });
   }
 
-  // ══ SETTINGS ══
-  if (state.view === "settings") {
+  // ── SETTINGS ──
+  if (state.gewichtView === "settings") {
     content.appendChild(h("div",{style:{display:"flex",alignItems:"center",gap:"10px",marginBottom:"18px"}},
-      h("button",{class:"btn-ghost",onClick:function(){state.view="checklist";render();}},"← Zurück"),
-      h("span",{class:"section-title",style:{marginBottom:"0"}},"Einstellungen")
-    ));
-
-    var nameInp = h("input",{class:"inp",placeholder:"App-Name…",value:state.appName,style:{flex:"1"}});
-    nameInp.addEventListener("input",function(){state.appName=nameInp.value;saveAll();
-      var t=document.querySelector(".header-title"); if(t) t.textContent=state.appName;});
-    content.appendChild(h("div",{class:"settings-card"},
-      h("span",{class:"settings-label"},"Name der App"),
-      h("div",{style:{display:"flex",gap:"10px"}},nameInp),
-      h("div",{class:"item-cat mt4"},"Wird im Header angezeigt")
+      h("button",{class:"btn-ghost",onClick:function(){state.gewichtView="checklist";renderGewicht();}},"← Zurück"),
+      h("span",{class:"section-title",style:{marginBottom:"0"}},"Einstellungen Gewicht")
     ));
 
     // Basisgewichte
-    var basisCard = h("div",{class:"settings-card"});
+    var basisCard=h("div",{class:"settings-card"});
     basisCard.appendChild(h("span",{class:"settings-label"},"Basisgewichte (immer geladen)"));
     basisCard.appendChild(h("div",{class:"item-cat",style:{marginBottom:"12px"}},"Leergewicht, Fahrer, Festeinbauten – alles was immer dabei ist."));
-    var basisList = document.createElement("div");
-
-    function renderBasisList() {
-      basisList.innerHTML = "";
-      state.baseWeights.forEach(function(bw) {
-        var nameEl = inlineEdit(bw.name, function(v){ bw.name=v; saveAll(); updateBasisTotal(); });
+    var basisList=document.createElement("div");
+    function renderBasisList(){
+      basisList.innerHTML="";
+      state.baseWeights.forEach(function(bw){
+        var nameEl=inlineEdit(bw.name,function(v){bw.name=v;saveAll();updateBasisTotal();});
         nameEl.style.cssText="flex:1;font-size:14px;color:#2c2416;";
-        var wEl = inlineEdit(String(bw.weight), function(v){ var n=parseFloat(v); if(!isNaN(n)&&n>=0){bw.weight=n;saveAll();updateBasisTotal();} });
+        var wEl=inlineEdit(String(bw.weight),function(v){var n=parseFloat(v);if(!isNaN(n)&&n>=0){bw.weight=n;saveAll();updateBasisTotal();}});
         wEl.style.cssText="font-weight:600;font-size:14px;color:#5a4a3a;white-space:nowrap;";
-        basisList.appendChild(h("div",{class:"basis-item"}, nameEl,
+        basisList.appendChild(h("div",{class:"basis-item"},nameEl,
           h("div",{style:{display:"flex",alignItems:"center",gap:"6px",flexShrink:"0"}},
-            wEl,
-            h("span",{style:{fontSize:"13px",color:"#8a7a6a"}}," kg"),
+            wEl,h("span",{style:{fontSize:"13px",color:"#8a7a6a"}}," kg"),
             h("button",{class:"btn-delete",onClick:(function(b){ return function(){
               if(state.baseWeights.length<=1) return;
               state.baseWeights=state.baseWeights.filter(function(x){return x.id!==b.id;});
-              saveAll(); renderBasisList(); updateBasisTotal();
+              saveAll();renderBasisList();updateBasisTotal();
             }; })(bw)},"✕")
           )
         ));
       });
     }
-
-    var totalEl = h("div",{class:"basis-total"},
-      h("span",null,"Startgewicht gesamt"),
-      h("span",{id:"basis-total-val"}, baseWeight().toFixed(1)+" kg")
-    );
-
-    function updateBasisTotal() {
-      var el=document.getElementById("basis-total-val");
-      if(el) el.textContent=baseWeight().toFixed(1)+" kg";
-      var sub=document.querySelector(".header-sub");
-      if(sub) sub.textContent="Max. "+MAX_WEIGHT+" kg · Basis: "+baseWeight()+" kg";
-    }
-
+    var totalEl=h("div",{class:"basis-total"},h("span",null,"Startgewicht gesamt"),h("span",{id:"basis-total-val"},baseWeight().toFixed(1)+" kg"));
+    function updateBasisTotal(){var el=document.getElementById("basis-total-val");if(el)el.textContent=baseWeight().toFixed(1)+" kg";}
     renderBasisList();
-    var bwName   = h("input",{class:"inp",placeholder:"Bezeichnung…",style:{flex:"2 1 120px"}});
-    var bwWeight = h("input",{class:"inp",placeholder:"kg",type:"number",step:"0.1",style:{flex:"1 1 70px"}});
-    function addBasis() {
-      var n=bwName.value.trim(), w=parseFloat(bwWeight.value);
-      if(!n||isNaN(w)||w<0) return;
-      state.baseWeights.push({id:Date.now(),name:n,weight:w});
-      bwName.value=""; bwWeight.value="";
-      saveAll(); renderBasisList(); updateBasisTotal();
-    }
-    bwName.addEventListener("keydown",function(e){ if(e.key==="Enter") addBasis(); });
-    bwWeight.addEventListener("keydown",function(e){ if(e.key==="Enter") addBasis(); });
-    basisCard.appendChild(basisList);
-    basisCard.appendChild(totalEl);
-    var addBasisBox = h("div",{class:"add-box",style:{marginTop:"12px",marginBottom:"0"}});
+    var bwName=h("input",{class:"inp",placeholder:"Bezeichnung…",style:{flex:"2 1 120px"}});
+    var bwWeight=h("input",{class:"inp",placeholder:"kg",type:"number",step:"0.1",style:{flex:"1 1 70px"}});
+    function addBasis(){var n=bwName.value.trim(),w=parseFloat(bwWeight.value);if(!n||isNaN(w)||w<0)return;state.baseWeights.push({id:Date.now(),name:n,weight:w});bwName.value="";bwWeight.value="";saveAll();renderBasisList();updateBasisTotal();}
+    bwName.addEventListener("keydown",function(e){if(e.key==="Enter")addBasis();});
+    bwWeight.addEventListener("keydown",function(e){if(e.key==="Enter")addBasis();});
+    basisCard.appendChild(basisList); basisCard.appendChild(totalEl);
+    var addBasisBox=h("div",{class:"add-box",style:{marginTop:"12px",marginBottom:"0"}});
     addBasisBox.appendChild(bwName); addBasisBox.appendChild(bwWeight);
     addBasisBox.appendChild(h("button",{class:"add-btn",onClick:addBasis},"＋"));
     basisCard.appendChild(addBasisBox);
@@ -572,45 +686,37 @@ function render() {
     content.appendChild(basisCard);
 
     // Kategorien
-    var catList = document.createElement("div");
-    catList.style.marginTop="10px";
-    function renderCatList() {
+    var catList=document.createElement("div"); catList.style.marginTop="10px";
+    function renderCatList(){
       catList.innerHTML="";
       state.categories.forEach(function(cat){
         var count=state.items.filter(function(i){return i.category===cat;}).length;
-        var nameEl=inlineEdit(cat, function(newName){
-          var n=newName.trim();
-          if(!n||n===cat||state.categories.includes(n)) return;
+        var nameEl=inlineEdit(cat,function(newName){
+          var n=newName.trim(); if(!n||n===cat||state.categories.includes(n)) return;
           state.categories=state.categories.map(function(c){return c===cat?n:c;});
           state.items=state.items.map(function(i){return i.category===cat?Object.assign({},i,{category:n}):i;});
-          saveAll(); renderCatList();
+          saveAll();renderCatList();
         });
         nameEl.style.cssText="flex:1;font-size:14px;color:#2c2416;";
-        catList.appendChild(h("div",{class:"cat-row"}, nameEl,
+        catList.appendChild(h("div",{class:"cat-row"},nameEl,
           h("span",{class:"item-cat"},"("+count+")"),
           h("button",{class:"btn-delete",onClick:(function(c){ return function(){
             state.categories=state.categories.filter(function(x){return x!==c;});
             state.items=state.items.map(function(i){return i.category===c?Object.assign({},i,{category:"Sonstiges"}):i;});
-            saveAll(); renderCatList();
+            saveAll();renderCatList();
           }; })(cat)},"✕")
         ));
       });
     }
     renderCatList();
     var ncInp=h("input",{class:"inp",placeholder:"Neue Kategorie…",style:{flex:"1"}});
-    function addCat(){
-      var n=ncInp.value.trim();
-      if(!n||state.categories.includes(n)) return;
-      state.categories.push(n); ncInp.value=""; saveAll(); renderCatList();
-    }
-    ncInp.addEventListener("keydown",function(e){ if(e.key==="Enter") addCat(); });
-    var catAddBox = h("div",{style:{display:"flex",gap:"8px",marginTop:"10px"}});
+    function addCat(){var n=ncInp.value.trim();if(!n||state.categories.includes(n))return;state.categories.push(n);ncInp.value="";saveAll();renderCatList();}
+    ncInp.addEventListener("keydown",function(e){if(e.key==="Enter")addCat();});
+    var catAddBox=h("div",{style:{display:"flex",gap:"8px",marginTop:"10px"}});
     catAddBox.appendChild(ncInp); catAddBox.appendChild(h("button",{class:"add-btn",onClick:addCat},"＋"));
-    content.appendChild(h("div",{class:"settings-card"},
-      h("span",{class:"settings-label"},"Kategorien"), catList, catAddBox,
-      h("div",{class:"hint"},"Kategorienamen direkt antippen zum Umbenennen")
-    ));
+    content.appendChild(h("div",{class:"settings-card"},h("span",{class:"settings-label"},"Kategorien"),catList,catAddBox,h("div",{class:"hint"},"Kategorienamen direkt antippen zum Umbenennen")));
 
+    // Danger
     content.appendChild(h("div",{class:"danger-card"},
       h("span",{class:"settings-label",style:{color:"#c0392b"}},"Daten zurücksetzen"),
       h("div",{class:"item-cat"},"Alle Positionen, Sets und Einstellungen auf Standard zurücksetzen."),
@@ -620,104 +726,40 @@ function render() {
   }
 }
 
-// ── Save to history ───────────────────────────────────────────────────────────
-function saveToHistory() {
-  if (state.selected.size===0) return;
+function saveToHistory(){
+  if(state.selected.size===0) return;
   var sw=selectedWeight();
-  state.history.unshift({
-    id: Date.now(),
-    date: new Date().toLocaleDateString("de-DE"),
-    totalWeight: totalWeight(),
-    selectedWeight: sw,
-    count: state.selected.size,
-    itemNames: state.items.filter(function(i){return state.selected.has(i.id);}).map(function(i){return i.name;}),
-  });
+  state.history.unshift({id:Date.now(),date:new Date().toLocaleDateString("de-DE"),totalWeight:totalWeight(),selectedWeight:sw,count:state.selected.size,itemNames:state.items.filter(function(i){return state.selected.has(i.id);}).map(function(i){return i.name;})});
   state.history=state.history.slice(0,20);
   saveAll();
   var btn=document.querySelector(".btn-accent[title='Fahrt speichern']");
-  if(btn){btn.textContent="✓ Gespeichert";btn.disabled=true;setTimeout(function(){render();},1200);}
+  if(btn){btn.textContent="✓ Gespeichert";btn.disabled=true;setTimeout(function(){renderGewicht();},1200);}
 }
 
-// ── Confirm modal ─────────────────────────────────────────────────────────────
-document.getElementById("confirm-cancel").addEventListener("click",function(){
-  document.getElementById("confirm-modal").classList.add("hidden");
-});
-document.getElementById("confirm-ok").addEventListener("click",function(){
-  document.getElementById("confirm-modal").classList.add("hidden");
-  state.appName     = DEFAULT_STATE.appName;
-  state.baseWeights = JSON.parse(JSON.stringify(DEFAULT_STATE.baseWeights));
-  state.categories  = [...DEFAULT_STATE.categories];
-  state.items       = JSON.parse(JSON.stringify(DEFAULT_STATE.items));
-  state.sets        = JSON.parse(JSON.stringify(DEFAULT_STATE.sets));
-  state.history     = [];
-  state.selected    = new Set();
-  state.view        = "checklist";
-  saveAll(); render();
-});
-document.getElementById("confirm-modal").addEventListener("click",function(e){
-  if(e.target.id==="confirm-modal") document.getElementById("confirm-modal").classList.add("hidden");
-});
-
-// ── Init ──────────────────────────────────────────────────────────────────────
-// App sofort anzeigen mit localStorage als Fallback
-function loadFromLocalStorage() {
-  try {
-    var s = localStorage.getItem("camper_state");
-    if (s) {
-      var d = JSON.parse(s);
-      state.appName     = d.appName     || DEFAULT_STATE.appName;
-      state.baseWeights = d.baseWeights || JSON.parse(JSON.stringify(DEFAULT_STATE.baseWeights));
-      state.categories  = d.categories  || [...DEFAULT_STATE.categories];
-      state.items       = d.items       || JSON.parse(JSON.stringify(DEFAULT_STATE.items));
-      state.sets        = d.sets        || JSON.parse(JSON.stringify(DEFAULT_STATE.sets));
-      state.history     = d.history     || [];
-      state.docs        = d.docs        || [];
-    }
-  } catch(e) {}
-}
-
-function saveToLocalStorage() {
-  try {
-    localStorage.setItem("camper_state", JSON.stringify({
-      appName: state.appName, baseWeights: state.baseWeights,
-      categories: state.categories, items: state.items,
-      sets: state.sets, history: state.history, docs: state.docs
-    }));
-  } catch(e) {}
-}
-
-function switchSection(section) {
-  state.section = section;
-  var gewichtApp = document.getElementById("app");
-  var docsApp    = document.getElementById("docs-app");
-  document.querySelectorAll(".bnav-btn").forEach(function(b){ b.classList.remove("active"); });
-  document.getElementById("bnav-" + section).classList.add("active");
-  if (section === "gewicht") {
-    gewichtApp.classList.remove("hidden");
-    docsApp.classList.add("hidden");
-    render();
-  } else if (section === "dokumente") {
-    gewichtApp.classList.add("hidden");
-    docsApp.classList.remove("hidden");
-    renderDocs();
-  }
-}
-
+// ══════════════════════════════════════════════════════════════════════════════
+// DOKUMENTE SCREEN
+// ══════════════════════════════════════════════════════════════════════════════
 function renderDocs() {
-  var app = document.getElementById("docs-app");
+  var app = document.getElementById("dokumente-screen");
   app.innerHTML = "";
 
-  // Header
+  var mod = state.modules.find(function(m){ return m.id==="dokumente"; }) || {};
+
   app.appendChild(h("div", {class:"header"},
     h("div", null,
-      h("div", {class:"header-title"}, "Dokumente"),
-      h("div", {class:"header-sub"}, "Handbücher & Anleitungen"),
+      h("div", {class:"header-title"}, state.appName + " – " + (mod.name||"Dokumente")),
+      h("div", {class:"header-sub"}, mod.desc||""),
       h("div", {class:"sync-indicator"}, state.syncStatus)
     ),
-    h("button", {class:"settings-btn", onClick: function(){ state.docsView="settings"; renderDocs(); }}, "⚙")
+    h("div", {style:{display:"flex",gap:"8px",alignItems:"center"}},
+      h("button", {class:"back-btn", onClick: function(){ showScreen("home"); }}, "🏠"),
+      state.docsView !== "settings"
+        ? h("button", {class:"settings-btn", onClick: function(){ state.docsView="settings"; renderDocs(); }}, "⚙")
+        : h("span", null, "")
+    )
   ));
 
-  var content = h("div", {style:{padding:"16px 16px 90px"}});
+  var content = h("div", {class:"content"});
   app.appendChild(content);
 
   // ── Einstellungen ──
@@ -727,129 +769,227 @@ function renderDocs() {
       h("span",{class:"section-title",style:{marginBottom:"0"}},"Dokumente verwalten")
     ));
 
-    // Dokument hinzufügen
-    var addBox = h("div", {class:"settings-card"});
+    var addBox=h("div",{class:"settings-card"});
     addBox.appendChild(h("span",{class:"settings-label"},"Dokument hinzufügen"));
-    var dName = h("input",{class:"inp",placeholder:"Name (z.B. Aufstelldach Anleitung)…",style:{marginBottom:"8px"}});
-    var dDesc = h("input",{class:"inp",placeholder:"Beschreibung (optional)…",style:{marginBottom:"8px"}});
-    var dUrl  = h("input",{class:"inp",placeholder:"OneDrive- oder sonstiger Link…",style:{marginBottom:"8px"}});
-    function addDoc() {
-      var n=dName.value.trim(), u=dUrl.value.trim();
-      if(!n||!u) return;
-      state.docs.push({id:Date.now(), name:n, desc:dDesc.value.trim(), url:u});
-      dName.value=""; dDesc.value=""; dUrl.value="";
-      saveAll(); renderDocs();
+    var dName=h("input",{class:"inp",placeholder:"Name (z.B. Aufstelldach Anleitung)…",style:{marginBottom:"8px"}});
+    var dDesc=h("input",{class:"inp",placeholder:"Beschreibung (optional)…",style:{marginBottom:"8px"}});
+    var dUrl=h("input",{class:"inp",placeholder:"OneDrive- oder sonstiger Link…",style:{marginBottom:"8px"}});
+    function addDoc(){
+      var n=dName.value.trim(),u=dUrl.value.trim(); if(!n||!u) return;
+      state.docs.push({id:Date.now(),name:n,desc:dDesc.value.trim(),url:u});
+      dName.value="";dDesc.value="";dUrl.value="";
+      saveAll();renderDocs();
     }
-    dUrl.addEventListener("keydown",function(e){ if(e.key==="Enter") addDoc(); });
-    addBox.appendChild(dName);
-    addBox.appendChild(dDesc);
-    addBox.appendChild(dUrl);
+    dUrl.addEventListener("keydown",function(e){if(e.key==="Enter")addDoc();});
+    addBox.appendChild(dName); addBox.appendChild(dDesc); addBox.appendChild(dUrl);
     addBox.appendChild(h("button",{class:"btn-accent",style:{width:"100%"},onClick:addDoc},"＋ Hinzufügen"));
     content.appendChild(addBox);
 
-    // Bestehende Dokumente verwalten
-    if (state.docs.length > 0) {
+    if(state.docs.length>0){
       content.appendChild(h("span",{class:"settings-label",style:{display:"block",marginBottom:"10px"}},"Gespeicherte Dokumente"));
-      state.docs.forEach(function(doc) {
+      state.docs.forEach(function(doc){
         content.appendChild(h("div",{class:"item-row"},
           h("div",{class:"flex1"},
-            h("div",{class:"item-name"}, doc.name),
-            doc.desc ? h("div",{class:"item-cat"}, doc.desc) : h("span",null,"")
+            h("div",{class:"item-name"},doc.name),
+            doc.desc?h("div",{class:"item-cat"},doc.desc):h("span",null,"")
           ),
-          h("button",{class:"btn-delete",onClick:function(){
-            state.docs = state.docs.filter(function(d){ return d.id !== doc.id; });
-            saveAll(); renderDocs();
-          }},"✕")
+          h("button",{class:"btn-delete",onClick:(function(d){ return function(){
+            state.docs=state.docs.filter(function(x){return x.id!==d.id;});
+            saveAll();renderDocs();
+          }; })(doc)},"✕")
         ));
       });
     }
     return;
   }
 
-  // ── Dokumentenliste ──
-  if (state.docs.length === 0) {
+  // ── Liste ──
+  if(state.docs.length===0){
     content.appendChild(h("div",{class:"empty"},"Noch keine Dokumente vorhanden. Tippe oben auf ⚙ um Dokumente hinzuzufügen."));
   }
-  state.docs.forEach(function(doc) {
-    content.appendChild(h("a", {class:"doc-card", href:doc.url, target:"_blank"},
-      h("span", {class:"doc-icon"}, "📄"),
-      h("div", {class:"flex1"},
-        h("div", {class:"doc-name"}, doc.name),
-        doc.desc ? h("div", {class:"doc-desc"}, doc.desc) : h("span",null,"")
+  state.docs.forEach(function(doc){
+    content.appendChild(h("a",{class:"doc-card",href:doc.url,target:"_blank"},
+      h("span",{class:"doc-icon"},"📄"),
+      h("div",{class:"flex1"},
+        h("div",{class:"doc-name"},doc.name),
+        doc.desc?h("div",{class:"doc-desc"},doc.desc):h("span",null,"")
       ),
-      h("span", {class:"doc-arrow"}, "›")
+      h("span",{class:"doc-arrow"},"›")
     ));
   });
 }
 
-function showApp() {
-  document.getElementById("loading").classList.add("hidden");
-  document.getElementById("app").classList.remove("hidden");
-  document.getElementById("bottom-nav").style.display = "flex";
-  render();
+// ── Export / Import ──────────────────────────────────────────────────────────
+function exportJSON() {
+  var data = getPersistedData();
+  var json = JSON.stringify(data, null, 2);
+  var blob = new Blob([json], {type: "application/json"});
+  var url  = URL.createObjectURL(blob);
+  var a    = document.createElement("a");
+  a.href   = url;
+  a.download = state.appName.replace(/\s+/g,"_") + "_Backup_" + new Date().toISOString().slice(0,10) + ".json";
+  a.click();
+  URL.revokeObjectURL(url);
 }
 
-function syncFromFirebase() {
-  if (!DOC) return;
-  DOC.get().then(function(snap) {
-    if (snap.exists) {
-      var d = snap.data();
-      state.appName     = d.appName     || DEFAULT_STATE.appName;
-      state.baseWeights = d.baseWeights || JSON.parse(JSON.stringify(DEFAULT_STATE.baseWeights));
-      state.categories  = d.categories  || [...DEFAULT_STATE.categories];
-      state.items       = d.items       || JSON.parse(JSON.stringify(DEFAULT_STATE.items));
-      state.sets        = d.sets        || JSON.parse(JSON.stringify(DEFAULT_STATE.sets));
-      state.history     = d.history     || [];
-      state.docs        = d.docs        || [];
-      state.syncStatus  = "✓ Verbunden";
-    } else {
-      state.syncStatus = "✓ Bereit";
-      DOC.set({
-        appName: state.appName, baseWeights: state.baseWeights,
-        categories: state.categories, items: state.items,
-        sets: state.sets, history: state.history
-      });
+function importJSON(file) {
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      var data = JSON.parse(e.target.result);
+      applyData(data);
+      state.selected = new Set();
+      saveAll();
+      renderHomeSettings();
+      alert("Import erfolgreich!");
+    } catch(err) {
+      alert("Fehler beim Import: Ungültige Datei.");
     }
+  };
+  reader.readAsText(file);
+}
+
+function exportPDF() {
+  var win = window.open("", "_blank");
+  var bw  = baseWeight();
+  var date = new Date().toLocaleDateString("de-DE");
+
+  var html = '<!DOCTYPE html><html><head><meta charset="UTF-8">';
+  html += '<title>' + state.appName + ' – Export</title>';
+  html += '<style>';
+  html += 'body{font-family:Arial,sans-serif;max-width:800px;margin:40px auto;color:#222;font-size:14px;}';
+  html += 'h1{color:#2c3e2d;border-bottom:3px solid #2c3e2d;padding-bottom:8px;margin-bottom:4px;}';
+  html += 'h2{color:#2c3e2d;margin-top:28px;margin-bottom:8px;font-size:16px;border-bottom:1px solid #ccc;padding-bottom:4px;}';
+  html += 'h3{color:#5a7c5a;margin:16px 0 6px;font-size:14px;}';
+  html += '.meta{color:#888;font-size:12px;margin-bottom:24px;}';
+  html += 'table{width:100%;border-collapse:collapse;margin-bottom:12px;}';
+  html += 'th{background:#2c3e2d;color:#fff;padding:7px 10px;text-align:left;font-size:13px;}';
+  html += 'td{padding:6px 10px;border-bottom:1px solid #eee;}';
+  html += 'tr:nth-child(even) td{background:#f8f8f8;}';
+  html += '.total{background:#2c3e2d;color:#fff;font-weight:bold;padding:8px 10px;border-radius:4px;margin:8px 0;}';
+  html += '.tag{display:inline-block;background:#e8e0d4;padding:2px 8px;border-radius:10px;font-size:12px;margin:2px;}';
+  html += '@media print{button{display:none!important;}}';
+  html += '</style></head><body>';
+
+  html += '<button onclick="window.print()" style="float:right;background:#2c3e2d;color:#fff;border:none;padding:8px 16px;border-radius:6px;cursor:pointer;font-size:14px;">🖨 Drucken / PDF</button>';
+  html += '<h1>' + state.appName + '</h1>';
+  html += '<div class="meta">Exportiert am ' + date + '</div>';
+
+  // Basisgewichte
+  html += '<h2>Basisgewichte</h2>';
+  html += '<table><tr><th>Bezeichnung</th><th style="text-align:right">Gewicht</th></tr>';
+  state.baseWeights.forEach(function(bw) {
+    html += '<tr><td>' + bw.name + '</td><td style="text-align:right">' + bw.weight + ' kg</td></tr>';
+  });
+  html += '<tr><td><strong>Startgewicht gesamt</strong></td><td style="text-align:right"><strong>' + bw + ' kg</strong></td></tr>';
+  html += '</table>';
+
+  // Positionen nach Kategorie
+  html += '<h2>Positionen (' + state.items.length + ')</h2>';
+  var cats = {};
+  state.items.forEach(function(item) {
+    if (!cats[item.category]) cats[item.category] = [];
+    cats[item.category].push(item);
+  });
+  Object.keys(cats).forEach(function(cat) {
+    html += '<h3>' + cat + '</h3>';
+    html += '<table><tr><th>Name</th><th>Notiz</th><th style="text-align:right">Gewicht</th></tr>';
+    cats[cat].forEach(function(item) {
+      html += '<tr><td>' + item.name + '</td><td style="color:#888">' + (item.note||"") + '</td><td style="text-align:right">' + item.weight + ' kg</td></tr>';
+    });
+    html += '</table>';
+  });
+
+  // Sets
+  if (state.sets.length > 0) {
+    html += '<h2>Sets (' + state.sets.length + ')</h2>';
+    state.sets.forEach(function(set) {
+      var setItems = state.items.filter(function(i){ return set.itemIds.includes(i.id); });
+      var setW = setItems.reduce(function(s,i){ return s+i.weight; }, 0);
+      var tot  = bw + setW;
+      html += '<h3>' + set.name + ' — Gesamt: ' + tot.toFixed(1) + ' kg</h3>';
+      html += '<div>';
+      setItems.forEach(function(i){ html += '<span class="tag">' + i.name + ' (' + i.weight + ' kg)</span>'; });
+      html += '</div>';
+    });
+  }
+
+  // Dokumente
+  if (state.docs.length > 0) {
+    html += '<h2>Dokumente (' + state.docs.length + ')</h2>';
+    html += '<table><tr><th>Name</th><th>Beschreibung</th><th>Link</th></tr>';
+    state.docs.forEach(function(doc) {
+      html += '<tr><td>' + doc.name + '</td><td>' + (doc.desc||"") + '</td><td><a href="' + doc.url + '">' + doc.url.slice(0,40) + '…</a></td></tr>';
+    });
+    html += '</table>';
+  }
+
+  html += '</body></html>';
+  win.document.write(html);
+  win.document.close();
+}
+
+// ── Confirm Modal ─────────────────────────────────────────────────────────────
+document.getElementById("confirm-cancel").addEventListener("click",function(){
+  document.getElementById("confirm-modal").classList.add("hidden");
+});
+document.getElementById("confirm-ok").addEventListener("click",function(){
+  document.getElementById("confirm-modal").classList.add("hidden");
+  applyData(JSON.parse(JSON.stringify(DEFAULT_STATE)));
+  state.selected=new Set();
+  state.gewichtView="checklist";
+  saveAll(); renderGewicht();
+});
+document.getElementById("confirm-modal").addEventListener("click",function(e){
+  if(e.target.id==="confirm-modal") document.getElementById("confirm-modal").classList.add("hidden");
+});
+
+// ── Firebase ──────────────────────────────────────────────────────────────────
+function syncFromFirebase(){
+  if(!DOC) return;
+  DOC.get().then(function(snap){
+    if(snap.exists){ applyData(snap.data()); }
+    else { DOC.set(getPersistedData()); }
+    state.syncStatus="✓ Verbunden";
     saveToLocalStorage();
-    render();
-  }).catch(function(e) {
-    state.syncStatus = "⚠ Offline";
-    render();
+    if(state.currentScreen==="home") renderHome();
+    else if(state.currentScreen==="gewicht") renderGewicht();
+    else if(state.currentScreen==="dokumente") renderDocs();
+    updateSyncIndicator();
+  }).catch(function(){
+    state.syncStatus="⚠ Offline";
+    updateSyncIndicator();
   });
 }
 
-function loadFirebase() {
-  var s1 = document.createElement("script");
-  s1.src = "https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js";
-  s1.onload = function() {
-    var s2 = document.createElement("script");
-    s2.src = "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js";
-    s2.onload = function() {
-      try {
+function loadFirebase(){
+  var s1=document.createElement("script");
+  s1.src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js";
+  s1.onload=function(){
+    var s2=document.createElement("script");
+    s2.src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js";
+    s2.onload=function(){
+      try{
         firebase.initializeApp(FIREBASE_CONFIG);
-        db  = firebase.firestore();
-        DOC = db.collection("camper").doc("gewicht");
-        state.syncStatus = "Synchronisiert…";
+        db=firebase.firestore();
+        DOC=db.collection("camper").doc("gewicht");
+        state.syncStatus="Synchronisiert…";
         updateSyncIndicator();
         syncFromFirebase();
-      } catch(e) {
-        state.syncStatus = "⚠ Firebase Fehler";
-        updateSyncIndicator();
-      }
+      }catch(e){ state.syncStatus="⚠ Firebase Fehler"; updateSyncIndicator(); }
     };
-    s2.onerror = function() { state.syncStatus = "⚠ Offline"; updateSyncIndicator(); };
+    s2.onerror=function(){ state.syncStatus="⚠ Offline"; updateSyncIndicator(); };
     document.head.appendChild(s2);
   };
-  s1.onerror = function() { state.syncStatus = "⚠ Offline"; updateSyncIndicator(); };
+  s1.onerror=function(){ state.syncStatus="⚠ Offline"; updateSyncIndicator(); };
   document.head.appendChild(s1);
 }
 
-// App sofort starten
+// ── Init ──────────────────────────────────────────────────────────────────────
 loadFromLocalStorage();
-state.syncStatus = "Verbindet…";
-showApp();
-
-// Firebase im Hintergrund laden
+state.syncStatus="Verbindet…";
+document.getElementById("loading").style.display="none";
+showScreen("home");
 setTimeout(loadFirebase, 100);
 </script>
 </body>
