@@ -388,7 +388,7 @@ function renderHomeSettings() {
       h("div", {class:"header-title"}, state.appName),
       h("div", {class:"header-sub"}, "Globale Einstellungen")
     ),
-    h("button", {class:"back-btn", onClick: function(){ renderHome(); }}, "✕")
+    h("button", {class:"back-btn", onClick: function(){ renderHome(); }, title:"Zur Startseite"}, (function(){ var d=document.createElement("span"); d.innerHTML='<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#f0ebe0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1V9.5z"/><path d="M9 21V12h6v9"/></svg>'; return d; })())
   ));
 
   var content = h("div", {class:"content"});
@@ -565,7 +565,7 @@ function renderGewicht() {
   app.appendChild(h("div", {class:"header"},
     headerLeft,
     h("div", {style:{display:"flex",gap:"8px",alignItems:"center"}},
-      h("button", {class:"back-btn", onClick: function(){ showScreen("home"); }}, "Zurueck"),
+      h("button", {class:"back-btn", onClick: function(){ showScreen("home"); }, title:"Zur Startseite"}, (function(){ var d=document.createElement("span"); d.innerHTML='<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#f0ebe0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1V9.5z"/><path d="M9 21V12h6v9"/></svg>'; return d; })()),
       state.gewichtView !== "settings"
         ? h("button", {class:"settings-btn", onClick: function(){ state.gewichtView="settings"; renderGewicht(); }}, "⚙")
         : h("span", null, "")
@@ -869,7 +869,7 @@ function renderDocs() {
       h("div", {class:"sync-indicator"}, state.syncStatus)
     ),
     h("div", {style:{display:"flex",gap:"8px",alignItems:"center"}},
-      h("button", {class:"back-btn", onClick: function(){ showScreen("home"); }}, "Zurueck"),
+      h("button", {class:"back-btn", onClick: function(){ showScreen("home"); }, title:"Zur Startseite"}, (function(){ var d=document.createElement("span"); d.innerHTML='<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#f0ebe0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1V9.5z"/><path d="M9 21V12h6v9"/></svg>'; return d; })()),
       state.docsView !== "settings"
         ? h("button", {class:"settings-btn", onClick: function(){ state.docsView="settings"; renderDocs(); }}, "⚙")
         : h("span", null, "")
