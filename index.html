@@ -113,22 +113,18 @@
   </div>
 </div>
 
-<!-- Firebase compat SDK (klassisch, kein ES-Modul) -->
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-
 <script>
-// ── Firebase init ─────────────────────────────────────────────────────────────
-firebase.initializeApp({
+// ── Firebase config (wird dynamisch geladen) ──────────────────────────────────
+var FIREBASE_CONFIG = {
   apiKey: "AIzaSyDtCpaOGWBSejWQHri_m22qNgQydAF9MP4",
   authDomain: "stonescamperapp.firebaseapp.com",
   projectId: "stonescamperapp",
   storageBucket: "stonescamperapp.firebasestorage.app",
   messagingSenderId: "264977884187",
   appId: "1:264977884187:web:9d324815cf05acec8944be"
-});
-const db  = firebase.firestore();
-const DOC = db.collection("camper").doc("gewicht");
+};
+var db  = null;
+var DOC = null;
 
 const MAX_WEIGHT = 3500;
 
@@ -621,47 +617,99 @@ document.getElementById("confirm-modal").addEventListener("click",function(e){
 });
 
 // ── Init ──────────────────────────────────────────────────────────────────────
+// App sofort anzeigen mit localStorage als Fallback
+function loadFromLocalStorage() {
+  try {
+    var s = localStorage.getItem("camper_state");
+    if (s) {
+      var d = JSON.parse(s);
+      state.appName     = d.appName     || DEFAULT_STATE.appName;
+      state.baseWeights = d.baseWeights || JSON.parse(JSON.stringify(DEFAULT_STATE.baseWeights));
+      state.categories  = d.categories  || [...DEFAULT_STATE.categories];
+      state.items       = d.items       || JSON.parse(JSON.stringify(DEFAULT_STATE.items));
+      state.sets        = d.sets        || JSON.parse(JSON.stringify(DEFAULT_STATE.sets));
+      state.history     = d.history     || [];
+    }
+  } catch(e) {}
+}
+
+function saveToLocalStorage() {
+  try {
+    localStorage.setItem("camper_state", JSON.stringify({
+      appName: state.appName, baseWeights: state.baseWeights,
+      categories: state.categories, items: state.items,
+      sets: state.sets, history: state.history
+    }));
+  } catch(e) {}
+}
+
 function showApp() {
   document.getElementById("loading").classList.add("hidden");
   document.getElementById("app").classList.remove("hidden");
   render();
 }
 
-var fallbackTimer = setTimeout(function(){
-  state.syncStatus = "⚠ Timeout";
-  document.getElementById("load-status").textContent = "Timeout – App startet mit Standarddaten";
-  showApp();
-}, 8000);
+function syncFromFirebase() {
+  if (!DOC) return;
+  DOC.get().then(function(snap) {
+    if (snap.exists) {
+      var d = snap.data();
+      state.appName     = d.appName     || DEFAULT_STATE.appName;
+      state.baseWeights = d.baseWeights || JSON.parse(JSON.stringify(DEFAULT_STATE.baseWeights));
+      state.categories  = d.categories  || [...DEFAULT_STATE.categories];
+      state.items       = d.items       || JSON.parse(JSON.stringify(DEFAULT_STATE.items));
+      state.sets        = d.sets        || JSON.parse(JSON.stringify(DEFAULT_STATE.sets));
+      state.history     = d.history     || [];
+      state.syncStatus  = "✓ Verbunden";
+    } else {
+      state.syncStatus = "✓ Bereit";
+      DOC.set({
+        appName: state.appName, baseWeights: state.baseWeights,
+        categories: state.categories, items: state.items,
+        sets: state.sets, history: state.history
+      });
+    }
+    saveToLocalStorage();
+    render();
+  }).catch(function(e) {
+    state.syncStatus = "⚠ Offline";
+    render();
+  });
+}
 
-DOC.get().then(function(snap) {
-  clearTimeout(fallbackTimer);
-  if (snap.exists) {
-    var d = snap.data();
-    state.appName     = d.appName     || DEFAULT_STATE.appName;
-    state.baseWeights = d.baseWeights || JSON.parse(JSON.stringify(DEFAULT_STATE.baseWeights));
-    state.categories  = d.categories  || [...DEFAULT_STATE.categories];
-    state.items       = d.items       || JSON.parse(JSON.stringify(DEFAULT_STATE.items));
-    state.sets        = d.sets        || JSON.parse(JSON.stringify(DEFAULT_STATE.sets));
-    state.history     = d.history     || [];
-    state.syncStatus  = "✓ Verbunden";
-  } else {
-    state.syncStatus = "✓ Bereit";
-    DOC.set({
-      appName:     DEFAULT_STATE.appName,
-      baseWeights: DEFAULT_STATE.baseWeights,
-      categories:  DEFAULT_STATE.categories,
-      items:       DEFAULT_STATE.items,
-      sets:        DEFAULT_STATE.sets,
-      history:     [],
-    });
-  }
-  showApp();
-}).catch(function(e) {
-  clearTimeout(fallbackTimer);
-  state.syncStatus = "⚠ " + e.message;
-  document.getElementById("load-status").textContent = "Fehler: " + e.message;
-  showApp();
-});
+function loadFirebase() {
+  var s1 = document.createElement("script");
+  s1.src = "https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js";
+  s1.onload = function() {
+    var s2 = document.createElement("script");
+    s2.src = "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js";
+    s2.onload = function() {
+      try {
+        firebase.initializeApp(FIREBASE_CONFIG);
+        db  = firebase.firestore();
+        DOC = db.collection("camper").doc("gewicht");
+        state.syncStatus = "Synchronisiert…";
+        updateSyncIndicator();
+        syncFromFirebase();
+      } catch(e) {
+        state.syncStatus = "⚠ Firebase Fehler";
+        updateSyncIndicator();
+      }
+    };
+    s2.onerror = function() { state.syncStatus = "⚠ Offline"; updateSyncIndicator(); };
+    document.head.appendChild(s2);
+  };
+  s1.onerror = function() { state.syncStatus = "⚠ Offline"; updateSyncIndicator(); };
+  document.head.appendChild(s1);
+}
+
+// App sofort starten
+loadFromLocalStorage();
+state.syncStatus = "Verbindet…";
+showApp();
+
+// Firebase im Hintergrund laden
+setTimeout(loadFirebase, 100);
 </script>
 </body>
 </html>
