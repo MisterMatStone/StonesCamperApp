@@ -35,7 +35,7 @@
     .nav { display: flex; background: #3d4e3e; padding: 6px 10px; gap: 4px; }
     .nav-btn { flex: 1; padding: 8px 2px; border-radius: 8px; color: #a0b5a0; font-size: 12px; font-weight: 500; transition: all 0.15s; }
     .nav-btn.active { background: #5a7c5a; color: #fff; }
-    .content { padding: 16px 16px 80px; }
+    .content { padding: 16px 16px 90px; }
     .section-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px; }
     .section-title { font-family: 'Fraunces', serif; font-size: 20px; font-weight: 700; margin-bottom: 12px; display: block; }
     .filter-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
@@ -88,6 +88,27 @@
     #loading .spinner { width: 36px; height: 36px; border: 3px solid #e0d8cc; border-top-color: #5a7c5a; border-radius: 50%; animation: spin 0.8s linear infinite; }
     #loading .load-status { font-size: 13px; color: #8a7a6a; }
     @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Bottom Navigation ── */
+    #bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: #2c3e2d; display: flex; z-index: 50; max-width: 680px; margin: 0 auto; }
+    /* Trick: bottom-nav zentrieren wie #app */
+    body { position: relative; }
+    #bottom-nav { left: 50%; transform: translateX(-50%); width: 100%; max-width: 680px; }
+    .bnav-btn { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 10px 4px 14px; color: #a0b5a0; font-size: 10px; font-weight: 500; gap: 4px; transition: all 0.15s; border: none; background: none; cursor: pointer; font-family: inherit; }
+    .bnav-btn .bnav-icon { font-size: 22px; }
+    .bnav-btn.active { color: #fff; }
+    .bnav-btn.active .bnav-icon { filter: drop-shadow(0 0 4px rgba(255,255,255,0.4)); }
+
+    /* ── Dokumente ── */
+    #docs-app { max-width: 680px; margin: 0 auto; min-height: 100vh; padding-bottom: 80px; }
+    .doc-card { display: flex; align-items: center; gap: 14px; padding: 14px 16px; background: #fff; border-radius: 12px; margin-bottom: 10px; box-shadow: 0 1px 3px #00000010; text-decoration: none; color: inherit; transition: all 0.15s; border: 2px solid transparent; }
+    .doc-card:hover { border-color: #5a7c5a; background: #f0f5f0; }
+    .doc-icon { font-size: 32px; flex-shrink: 0; }
+    .doc-name { font-size: 15px; font-weight: 600; color: #2c2416; }
+    .doc-desc { font-size: 12px; color: #8a7a6a; margin-top: 3px; }
+    .doc-arrow { font-size: 18px; color: #b0a898; margin-left: auto; flex-shrink: 0; }
+    .doc-add-box { background: #fff; border-radius: 14px; padding: 16px; margin-bottom: 14px; box-shadow: 0 1px 4px #00000012; }
+    .doc-add-title { font-family: 'Fraunces', serif; font-size: 16px; font-weight: 700; margin-bottom: 12px; color: #2c3e2d; }
   </style>
 </head>
 <body>
@@ -99,6 +120,19 @@
 </div>
 
 <div id="app" class="hidden"></div>
+<div id="docs-app" class="hidden"></div>
+
+<!-- Bottom Navigation -->
+<div id="bottom-nav" class="hidden">
+  <button class="bnav-btn active" id="bnav-gewicht" onclick="switchSection('gewicht')">
+    <span class="bnav-icon">⚖️</span>
+    <span>Gewicht</span>
+  </button>
+  <button class="bnav-btn" id="bnav-dokumente" onclick="switchSection('dokumente')">
+    <span class="bnav-icon">📄</span>
+    <span>Dokumente</span>
+  </button>
+</div>
 
 <div id="confirm-modal" class="modal-overlay hidden">
   <div class="modal">
@@ -149,6 +183,7 @@ var DEFAULT_STATE = {
     {id:3,name:"Herbstreise",itemIds:[2,3,4,5,6,7,8],note:""},
   ],
   history: [],
+  docs: [],
 };
 
 var state = {
@@ -158,9 +193,11 @@ var state = {
   items:       JSON.parse(JSON.stringify(DEFAULT_STATE.items)),
   sets:        JSON.parse(JSON.stringify(DEFAULT_STATE.sets)),
   history:     [],
+  docs:        [],
   selected:    new Set(),
   view:        "checklist",
   filterCat:   "Alle",
+  section:     "gewicht",
   syncStatus:  "Verbindet…",
 };
 
@@ -185,6 +222,7 @@ function saveAll() {
       items:       state.items,
       sets:        state.sets,
       history:     state.history,
+      docs:        state.docs,
     }).then(function() {
       state.syncStatus = "✓ Gespeichert";
       updateSyncIndicator();
@@ -635,6 +673,7 @@ function loadFromLocalStorage() {
       state.items       = d.items       || JSON.parse(JSON.stringify(DEFAULT_STATE.items));
       state.sets        = d.sets        || JSON.parse(JSON.stringify(DEFAULT_STATE.sets));
       state.history     = d.history     || [];
+      state.docs        = d.docs        || [];
     }
   } catch(e) {}
 }
@@ -644,14 +683,91 @@ function saveToLocalStorage() {
     localStorage.setItem("camper_state", JSON.stringify({
       appName: state.appName, baseWeights: state.baseWeights,
       categories: state.categories, items: state.items,
-      sets: state.sets, history: state.history
+      sets: state.sets, history: state.history, docs: state.docs
     }));
   } catch(e) {}
+}
+
+function switchSection(section) {
+  state.section = section;
+  var gewichtApp = document.getElementById("app");
+  var docsApp    = document.getElementById("docs-app");
+  document.querySelectorAll(".bnav-btn").forEach(function(b){ b.classList.remove("active"); });
+  document.getElementById("bnav-" + section).classList.add("active");
+  if (section === "gewicht") {
+    gewichtApp.classList.remove("hidden");
+    docsApp.classList.add("hidden");
+    render();
+  } else if (section === "dokumente") {
+    gewichtApp.classList.add("hidden");
+    docsApp.classList.remove("hidden");
+    renderDocs();
+  }
+}
+
+function renderDocs() {
+  var app = document.getElementById("docs-app");
+  app.innerHTML = "";
+
+  // Header
+  app.appendChild(h("div", {class:"header"},
+    h("div", null,
+      h("div", {class:"header-title"}, "Dokumente"),
+      h("div", {class:"header-sub"}, "Handbücher & Anleitungen"),
+      h("div", {class:"sync-indicator"}, state.syncStatus)
+    )
+  ));
+
+  var content = h("div", {style:{padding:"16px 16px 80px"}});
+  app.appendChild(content);
+
+  // Dokument hinzufügen
+  var addBox = h("div", {class:"doc-add-box"});
+  addBox.appendChild(h("div", {class:"doc-add-title"}, "Dokument hinzufügen"));
+  var dName = h("input",{class:"inp",placeholder:"Name (z.B. Aufstelldach Anleitung)…",style:{marginBottom:"8px"}});
+  var dDesc = h("input",{class:"inp",placeholder:"Beschreibung (optional)…",style:{marginBottom:"8px"}});
+  var dUrl  = h("input",{class:"inp",placeholder:"URL zum PDF…",style:{marginBottom:"8px"}});
+  function addDoc() {
+    var n=dName.value.trim(), u=dUrl.value.trim();
+    if(!n||!u) return;
+    state.docs.push({id:Date.now(), name:n, desc:dDesc.value.trim(), url:u});
+    dName.value=""; dDesc.value=""; dUrl.value="";
+    saveAll(); renderDocs();
+  }
+  addBox.appendChild(dName);
+  addBox.appendChild(dDesc);
+  addBox.appendChild(dUrl);
+  addBox.appendChild(h("button",{class:"btn-accent",style:{width:"100%"},onClick:addDoc},"＋ Dokument hinzufügen"));
+  content.appendChild(addBox);
+
+  // Dokumente Liste
+  if (state.docs.length === 0) {
+    content.appendChild(h("div",{class:"empty"},"Noch keine Dokumente. Füge dein erstes PDF hinzu!"));
+  }
+  state.docs.forEach(function(doc) {
+    var card = h("a", {class:"doc-card", href:doc.url, target:"_blank"},
+      h("span", {class:"doc-icon"}, "📄"),
+      h("div", {class:"flex1"},
+        h("div", {class:"doc-name"}, doc.name),
+        doc.desc ? h("div", {class:"doc-desc"}, doc.desc) : h("span",null,"")
+      ),
+      h("span", {class:"doc-arrow"}, "›")
+    );
+    // Löschen-Button
+    var delBtn = h("button",{class:"btn-delete",onClick:function(e){
+      e.preventDefault(); e.stopPropagation();
+      state.docs = state.docs.filter(function(d){ return d.id !== doc.id; });
+      saveAll(); renderDocs();
+    }},"✕");
+    card.appendChild(delBtn);
+    content.appendChild(card);
+  });
 }
 
 function showApp() {
   document.getElementById("loading").classList.add("hidden");
   document.getElementById("app").classList.remove("hidden");
+  document.getElementById("bottom-nav").classList.remove("hidden");
   render();
 }
 
@@ -666,6 +782,7 @@ function syncFromFirebase() {
       state.items       = d.items       || JSON.parse(JSON.stringify(DEFAULT_STATE.items));
       state.sets        = d.sets        || JSON.parse(JSON.stringify(DEFAULT_STATE.sets));
       state.history     = d.history     || [];
+      state.docs        = d.docs        || [];
       state.syncStatus  = "✓ Verbunden";
     } else {
       state.syncStatus = "✓ Bereit";
