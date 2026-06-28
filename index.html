@@ -119,10 +119,21 @@
     /* ── PDF Viewer ── */
     #pdf-overlay { position: fixed; inset: 0; background: #1a1a1a; z-index: 300; display: flex; flex-direction: column; }
     #pdf-overlay.hidden { display: none !important; }
-    .pdf-header { background: #2c3e2d; color: #f0ebe0; padding: 12px 16px; display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
-    .pdf-title { flex: 1; font-size: 15px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .pdf-close { font-size: 22px; color: #f0ebe0; padding: 4px 8px; cursor: pointer; border: none; background: none; flex-shrink: 0; font-family: inherit; }
-    #pdf-frame { flex: 1; width: 100%; border: none; background: #fff; }
+    .pdf-header { background: #2c3e2d; color: #f0ebe0; padding: 10px 14px; display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+    .pdf-title { flex: 1; font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .pdf-close { font-size: 20px; color: #f0ebe0; padding: 4px 8px; cursor: pointer; border: none; background: none; flex-shrink: 0; font-family: inherit; }
+    .pdf-canvas-wrap { flex: 1; overflow-y: auto; overflow-x: auto; background: #404040; display: flex; flex-direction: column; align-items: center; padding: 12px 8px; gap: 12px; -webkit-overflow-scrolling: touch; }
+    .pdf-page-canvas { background: #fff; box-shadow: 0 2px 8px #0004; display: block; max-width: 100%; }
+    .pdf-nav { background: #2c3e2d; color: #f0ebe0; padding: 10px 16px; display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-shrink: 0; }
+    .pdf-nav-btn { background: #5a7c5a; color: #fff; border: none; border-radius: 8px; padding: 8px 16px; font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit; }
+    .pdf-nav-btn:disabled { background: #3a5a3a; opacity: 0.5; cursor: default; }
+    .pdf-page-info { font-size: 13px; display: flex; align-items: center; gap: 8px; }
+    .pdf-page-input { width: 48px; text-align: center; border-radius: 6px; border: none; padding: 4px 6px; font-size: 14px; font-weight: 600; color: #2c2416; font-family: inherit; }
+    .pdf-loading { color: #f0ebe0; font-size: 14px; text-align: center; padding: 40px; }
+    .pdf-thumb-bar { background: #1a1a1a; padding: 8px; display: flex; gap: 8px; overflow-x: auto; flex-shrink: 0; -webkit-overflow-scrolling: touch; }
+    .pdf-thumb { width: 48px; height: 64px; background: #fff; border-radius: 4px; cursor: pointer; flex-shrink: 0; border: 2px solid transparent; overflow: hidden; }
+    .pdf-thumb.active { border-color: #5a7c5a; }
+    .pdf-thumb canvas { width: 100%; height: 100%; object-fit: contain; }
     .doc-icon { font-size: 32px; flex-shrink: 0; }
     .doc-name { font-size: 15px; font-weight: 600; color: #2c2416; }
     .doc-desc { font-size: 12px; color: #8a7a6a; margin-top: 3px; }
@@ -153,7 +164,17 @@
     <button class="pdf-close" id="pdf-close">&#x2715;</button>
     <div class="pdf-title" id="pdf-title">Dokument</div>
   </div>
-  <iframe id="pdf-frame" src="" allowfullscreen></iframe>
+  <div class="pdf-thumb-bar" id="pdf-thumb-bar"></div>
+  <div class="pdf-canvas-wrap" id="pdf-canvas-wrap">
+    <div class="pdf-loading" id="pdf-loading">PDF wird geladen...</div>
+  </div>
+  <div class="pdf-nav">
+    <button class="pdf-nav-btn" id="pdf-prev">&#8592; Zurück</button>
+    <div class="pdf-page-info">
+      Seite <input class="pdf-page-input" id="pdf-page-input" type="number" min="1" value="1"> von <span id="pdf-total">?</span>
+    </div>
+    <button class="pdf-nav-btn" id="pdf-next">Weiter &#8594;</button>
+  </div>
 </div>
 
 <!-- Confirm Modal -->
@@ -170,16 +191,121 @@
 </div>
 
 <script>
-// ── PDF Viewer ───────────────────────────────────────────────────────────────
+// ── PDF Viewer mit PDF.js ────────────────────────────────────────────────────
+var pdfDoc = null;
+var pdfCurrentPage = 1;
+var pdfRendering = false;
+var PDF_JS_URL = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js";
+var PDF_WORKER_URL = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+var pdfJsLoaded = false;
+
+function loadPdfJs(callback) {
+  if (pdfJsLoaded) { callback(); return; }
+  var s = document.createElement("script");
+  s.src = PDF_JS_URL;
+  s.onload = function() {
+    pdfjsLib.GlobalWorkerOptions.workerSrc = PDF_WORKER_URL;
+    pdfJsLoaded = true;
+    callback();
+  };
+  document.head.appendChild(s);
+}
+
+function renderPage(pageNum) {
+  if (!pdfDoc || pdfRendering) return;
+  pdfRendering = true;
+  pdfCurrentPage = pageNum;
+
+  // Seiteninput aktualisieren
+  document.getElementById("pdf-page-input").value = pageNum;
+  document.getElementById("pdf-prev").disabled = pageNum <= 1;
+  document.getElementById("pdf-next").disabled = pageNum >= pdfDoc.numPages;
+
+  // Thumbnail aktiv markieren
+  document.querySelectorAll(".pdf-thumb").forEach(function(t, i) {
+    t.classList.toggle("active", i + 1 === pageNum);
+    if (i + 1 === pageNum) t.scrollIntoView({behavior:"smooth", block:"nearest", inline:"center"});
+  });
+
+  pdfDoc.getPage(pageNum).then(function(page) {
+    var viewport = page.getViewport({scale: window.devicePixelRatio > 1 ? 1.5 : 1.2});
+
+    // Canvas erstellen oder wiederverwenden
+    var wrap = document.getElementById("pdf-canvas-wrap");
+    wrap.innerHTML = "";
+    var canvas = document.createElement("canvas");
+    canvas.className = "pdf-page-canvas";
+    canvas.width = viewport.width;
+    canvas.height = viewport.height;
+    canvas.style.width = Math.min(viewport.width, window.innerWidth - 16) + "px";
+    canvas.style.height = "auto";
+    wrap.appendChild(canvas);
+    wrap.scrollTop = 0;
+
+    var ctx = canvas.getContext("2d");
+    page.render({canvasContext: ctx, viewport: viewport}).promise.then(function() {
+      pdfRendering = false;
+    });
+  });
+}
+
+function renderThumbnails() {
+  var bar = document.getElementById("pdf-thumb-bar");
+  bar.innerHTML = "";
+  for (var i = 1; i <= pdfDoc.numPages; i++) {
+    (function(pageNum) {
+      var thumb = document.createElement("div");
+      thumb.className = "pdf-thumb" + (pageNum === 1 ? " active" : "");
+      thumb.title = "Seite " + pageNum;
+      var canvas = document.createElement("canvas");
+      thumb.appendChild(canvas);
+      bar.appendChild(thumb);
+      thumb.addEventListener("click", function() { renderPage(pageNum); });
+
+      pdfDoc.getPage(pageNum).then(function(page) {
+        var vp = page.getViewport({scale: 0.2});
+        canvas.width = vp.width;
+        canvas.height = vp.height;
+        canvas.style.width = "100%";
+        canvas.style.height = "100%";
+        page.render({canvasContext: canvas.getContext("2d"), viewport: vp});
+      });
+    })(i);
+  }
+}
+
 function openPDF(url, title) {
-  document.getElementById("pdf-frame").src = url;
   document.getElementById("pdf-title").textContent = title;
+  document.getElementById("pdf-loading").style.display = "block";
+  document.getElementById("pdf-canvas-wrap").innerHTML = '<div class="pdf-loading" id="pdf-loading">PDF wird geladen...</div>';
+  document.getElementById("pdf-thumb-bar").innerHTML = "";
+  document.getElementById("pdf-total").textContent = "?";
+  document.getElementById("pdf-page-input").value = 1;
+  document.getElementById("pdf-prev").disabled = true;
+  document.getElementById("pdf-next").disabled = true;
   document.getElementById("pdf-overlay").classList.remove("hidden");
+  pdfDoc = null;
+  pdfCurrentPage = 1;
+  pdfRendering = false;
+
+  loadPdfJs(function() {
+    pdfjsLib.getDocument(url).promise.then(function(doc) {
+      pdfDoc = doc;
+      document.getElementById("pdf-total").textContent = doc.numPages;
+      document.getElementById("pdf-next").disabled = doc.numPages <= 1;
+      renderThumbnails();
+      renderPage(1);
+    }).catch(function(e) {
+      document.getElementById("pdf-canvas-wrap").innerHTML = '<div class="pdf-loading">Fehler beim Laden des PDFs.<br>Bitte Verbindung prüfen.</div>';
+    });
+  });
 }
 
 function closePDF() {
   document.getElementById("pdf-overlay").classList.add("hidden");
-  document.getElementById("pdf-frame").src = "";
+  pdfDoc = null;
+  document.getElementById("pdf-canvas-wrap").innerHTML = "";
+  document.getElementById("pdf-thumb-bar").innerHTML = "";
 }
 
 // ── GitHub API ───────────────────────────────────────────────────────────────
@@ -1147,8 +1273,18 @@ document.getElementById("confirm-modal").addEventListener("click",function(e){
   if(e.target.id==="confirm-modal") document.getElementById("confirm-modal").classList.add("hidden");
 });
 
-// ── PDF Close Button ─────────────────────────────────────────────────────────
+// ── PDF Navigation ───────────────────────────────────────────────────────────
 document.getElementById("pdf-close").addEventListener("click", closePDF);
+document.getElementById("pdf-prev").addEventListener("click", function() {
+  if (pdfCurrentPage > 1) renderPage(pdfCurrentPage - 1);
+});
+document.getElementById("pdf-next").addEventListener("click", function() {
+  if (pdfDoc && pdfCurrentPage < pdfDoc.numPages) renderPage(pdfCurrentPage + 1);
+});
+document.getElementById("pdf-page-input").addEventListener("change", function() {
+  var p = parseInt(this.value);
+  if (pdfDoc && p >= 1 && p <= pdfDoc.numPages) renderPage(p);
+});
 
 // ── Firebase ──────────────────────────────────────────────────────────────────
 function syncFromFirebase(){
