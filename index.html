@@ -471,10 +471,10 @@ function updateSyncIndicator() {
 }
 
 // ── Computed ──────────────────────────────────────────────────────────────────
-function baseWeight()     { return state.items.filter(function(i){ return i.basis; }).reduce(function(s,i){ return s+i.weight; }, 0); }
-function selectedWeight() { return state.items.filter(function(i){ return !i.basis && state.selected.has(i.id); }).reduce(function(s,i){ return s+i.weight; }, 0); }
-function totalWeight()    { return baseWeight() + selectedWeight(); }
-function remaining()      { return MAX_WEIGHT - totalWeight(); }
+function baseWeight()     { return Math.round(state.items.filter(function(i){ return i.basis; }).reduce(function(s,i){ return s+i.weight; }, 0) * 100) / 100; }
+function selectedWeight() { return Math.round(state.items.filter(function(i){ return !i.basis && state.selected.has(i.id); }).reduce(function(s,i){ return s+i.weight; }, 0) * 100) / 100; }
+function totalWeight()    { return Math.round((baseWeight() + selectedWeight()) * 100) / 100; }
+function remaining()      { return Math.round((MAX_WEIGHT - totalWeight()) * 100) / 100; }
 
 // ── DOM helpers ───────────────────────────────────────────────────────────────
 function h(tag, attrs) {
