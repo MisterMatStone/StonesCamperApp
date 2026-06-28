@@ -115,6 +115,14 @@
     /* ── Dokumente ── */
     .doc-card { display: flex; align-items: center; gap: 14px; padding: 14px 16px; background: #fff; border-radius: 12px; margin-bottom: 10px; box-shadow: 0 1px 3px #00000010; text-decoration: none; color: inherit; border: 2px solid transparent; transition: all 0.15s; }
     .doc-card:hover { border-color: #5a7c5a; background: #f0f5f0; }
+
+    /* ── PDF Viewer ── */
+    #pdf-overlay { position: fixed; inset: 0; background: #1a1a1a; z-index: 300; display: flex; flex-direction: column; }
+    #pdf-overlay.hidden { display: none !important; }
+    .pdf-header { background: #2c3e2d; color: #f0ebe0; padding: 12px 16px; display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+    .pdf-title { flex: 1; font-size: 15px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .pdf-close { font-size: 22px; color: #f0ebe0; padding: 4px 8px; cursor: pointer; border: none; background: none; flex-shrink: 0; font-family: inherit; }
+    #pdf-frame { flex: 1; width: 100%; border: none; background: #fff; }
     .doc-icon { font-size: 32px; flex-shrink: 0; }
     .doc-name { font-size: 15px; font-weight: 600; color: #2c2416; }
     .doc-desc { font-size: 12px; color: #8a7a6a; margin-top: 3px; }
@@ -139,6 +147,15 @@
 <!-- Dokumente Screen -->
 <div id="dokumente-screen" style="display:none"></div>
 
+<!-- PDF Viewer Overlay -->
+<div id="pdf-overlay" class="hidden">
+  <div class="pdf-header">
+    <button class="pdf-close" id="pdf-close">&#x2715;</button>
+    <div class="pdf-title" id="pdf-title">Dokument</div>
+  </div>
+  <iframe id="pdf-frame" src="" allowfullscreen></iframe>
+</div>
+
 <!-- Confirm Modal -->
 <div id="confirm-modal" class="modal-overlay hidden">
   <div class="modal">
@@ -153,6 +170,18 @@
 </div>
 
 <script>
+// ── PDF Viewer ───────────────────────────────────────────────────────────────
+function openPDF(url, title) {
+  document.getElementById("pdf-frame").src = url;
+  document.getElementById("pdf-title").textContent = title;
+  document.getElementById("pdf-overlay").classList.remove("hidden");
+}
+
+function closePDF() {
+  document.getElementById("pdf-overlay").classList.add("hidden");
+  document.getElementById("pdf-frame").src = "";
+}
+
 // ── GitHub API ───────────────────────────────────────────────────────────────
 var GITHUB_DOCS_API = "https://api.github.com/repos/mistermatstone/StonesCamperApp/contents/docs";
 
@@ -945,7 +974,10 @@ function renderDocs() {
         var displayName = file.name.replace(/\.pdf$/i,"").replace(/_/g," ");
         // GitHub Raw URL für direkten PDF-Aufruf
         var pdfUrl = "https://mistermatstone.github.io/StonesCamperApp/docs/" + encodeURIComponent(file.name);
-        listContainer.appendChild(h("a",{class:"doc-card",href:pdfUrl,target:"_blank"},
+        listContainer.appendChild(h("a",{class:"doc-card",href:pdfUrl,onClick:(function(url, name){ return function(e){
+          e.preventDefault();
+          openPDF(url, name);
+        }; })(pdfUrl, displayName)},
           h("span",{class:"doc-icon"},(function(){
             var s=document.createElement("span");
             s.innerHTML='<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#5a7c5a" stroke-width="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>';
@@ -1114,6 +1146,9 @@ document.getElementById("confirm-ok").addEventListener("click",function(){
 document.getElementById("confirm-modal").addEventListener("click",function(e){
   if(e.target.id==="confirm-modal") document.getElementById("confirm-modal").classList.add("hidden");
 });
+
+// ── PDF Close Button ─────────────────────────────────────────────────────────
+document.getElementById("pdf-close").addEventListener("click", closePDF);
 
 // ── Firebase ──────────────────────────────────────────────────────────────────
 function syncFromFirebase(){
