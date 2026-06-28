@@ -4,6 +4,24 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>StonesCamperApp</title>
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js').then(function(reg) {
+        reg.addEventListener('updatefound', function() {
+          var newWorker = reg.installing;
+          newWorker.addEventListener('statechange', function() {
+            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+              // Neue Version verfügbar - automatisch laden
+              newWorker.postMessage({action: 'skipWaiting'});
+            }
+          });
+        });
+      });
+      navigator.serviceWorker.addEventListener('controllerchange', function() {
+        window.location.reload();
+      });
+    }
+  </script>
   <link id="favicon" rel="icon" type="image/png" href="favicon.png">
   <link rel="apple-touch-icon" href="favicon.png">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -676,6 +694,23 @@ function renderHomeSettings() {
     ));
   });
   content.appendChild(modCard);
+
+  // App aktualisieren
+  var updateCard = h("div", {class:"settings-card"});
+  updateCard.appendChild(h("span", {class:"settings-label"}, "App aktualisieren"));
+  updateCard.appendChild(h("div", {class:"item-cat", style:{marginBottom:"12px"}}, "Falls die App nicht die neueste Version zeigt, hier manuell aktualisieren."));
+  updateCard.appendChild(h("button", {class:"btn-accent", style:{width:"100%"}, onClick: function(){
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(function(regs) {
+        regs.forEach(function(reg) { reg.unregister(); });
+        window.location.reload(true);
+      });
+    } else {
+      window.location.reload(true);
+    }
+  }}, "App neu laden"));
+  updateCard.appendChild(h("div", {class:"hint"}, "Laedt die neueste Version aus GitHub"));
+  content.appendChild(updateCard);
 
   // Backup & Export
   var backupCard = h("div", {class:"settings-card"});
